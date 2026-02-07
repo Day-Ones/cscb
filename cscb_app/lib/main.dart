@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'core/di/locator.dart';
 import 'screens/login_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Database and Repo
+  await setupLocator();
+
   runApp(const MyApp());
 }
 
