@@ -58,13 +58,23 @@ class Attendance extends Table with SyncableTable {
   Set<Column> get primaryKey => {id};
 }
 
+class UserProfiles extends Table with SyncableTable {
+  TextColumn get userId => text().references(Users, #id)();
+  TextColumn get name => text()();
+  TextColumn get program => text()();
+  IntColumn get yearLevel => integer()();
+  IntColumn get section => integer()();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // --- DATABASE CLASS ---
-@DriftDatabase(tables: [Users, Organizations, Memberships, Events, Attendance])
+@DriftDatabase(tables: [Users, Organizations, Memberships, Events, Attendance, UserProfiles])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -77,6 +87,16 @@ class AppDatabase extends _$AppDatabase {
           // Migration from version 1 to 2: Add passwordHash and role columns
           await m.addColumn(users, users.passwordHash);
           await m.addColumn(users, users.role);
+        }
+        if (from < 3) {
+          // Migration from version 2 to 3: Add UserProfiles table
+          await m.createTable(userProfiles);
+        }
+        if (from < 4) {
+          // Migration from version 3 to 4: Update UserProfiles structure
+          // Drop and recreate the table with new schema
+          await m.deleteTable('user_profiles');
+          await m.createTable(userProfiles);
         }
       },
     );

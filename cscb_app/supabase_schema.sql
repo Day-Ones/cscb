@@ -71,6 +71,20 @@ CREATE TABLE IF NOT EXISTS attendance (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User Profiles Table
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id TEXT PRIMARY KEY,
+    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    program TEXT NOT NULL,
+    year_level TEXT NOT NULL,
+    is_synced BOOLEAN DEFAULT FALSE,
+    client_updated_at TIMESTAMP WITH TIME ZONE,
+    deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted);
@@ -81,6 +95,8 @@ CREATE INDEX IF NOT EXISTS idx_memberships_org_id ON memberships(org_id);
 CREATE INDEX IF NOT EXISTS idx_events_org_id ON events(org_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_event_id ON attendance(event_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_user_id ON attendance(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_deleted ON user_profiles(deleted);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -88,6 +104,7 @@ ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memberships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for Users
 CREATE POLICY "Users are viewable by everyone" ON users
@@ -139,6 +156,16 @@ CREATE POLICY "Attendance can be created by anyone" ON attendance
 CREATE POLICY "Attendance can be updated by anyone" ON attendance
     FOR UPDATE USING (true);
 
+-- RLS Policies for User Profiles
+CREATE POLICY "User profiles are viewable by everyone" ON user_profiles
+    FOR SELECT USING (true);
+
+CREATE POLICY "User profiles can be created by anyone" ON user_profiles
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "User profiles can be updated by anyone" ON user_profiles
+    FOR UPDATE USING (true);
+
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -162,4 +189,7 @@ CREATE TRIGGER update_events_updated_at BEFORE UPDATE ON events
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON attendance
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
