@@ -1,4 +1,4 @@
-package com.cscb.cscb_app
+package com.lyxn.cscb
 
 import io.flutter.embedding.android.FlutterActivity
 
