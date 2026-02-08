@@ -37,14 +37,44 @@ class Memberships extends Table with SyncableTable {
   TextColumn get orgId => text().references(Organizations, #id)();
   TextColumn get role => text()();
   TextColumn get status => text().withDefault(const Constant('pending'))();
+  TextColumn get officerTitleId => text().nullable().references(OfficerTitles, #id)();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class OfficerTitles extends Table with SyncableTable {
+  TextColumn get orgId => text().references(Organizations, #id)();
+  TextColumn get title => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class OrganizationPermissions extends Table with SyncableTable {
+  TextColumn get orgId => text().references(Organizations, #id)();
+  TextColumn get permissionKey => text()();
+  BoolColumn get enabledForOfficers => boolean().withDefault(const Constant(false))();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class MemberPermissions extends Table with SyncableTable {
+  TextColumn get membershipId => text().references(Memberships, #id)();
+  TextColumn get permissionKey => text()();
+  BoolColumn get isGranted => boolean()();
   @override
   Set<Column> get primaryKey => {id};
 }
 
 class Events extends Table with SyncableTable {
   TextColumn get orgId => text().references(Organizations, #id)();
-  TextColumn get title => text()();
-  DateTimeColumn get date => dateTime()();
+  TextColumn get name => text()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get eventDate => dateTime()();
+  TextColumn get location => text()();
+  IntColumn get maxAttendees => integer().nullable()();
+  TextColumn get createdBy => text().references(Users, #id)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -69,9 +99,22 @@ class UserProfiles extends Table with SyncableTable {
 }
 
 // --- DATABASE CLASS ---
-@DriftDatabase(tables: [Users, Organizations, Memberships, Events, Attendance, UserProfiles])
+@DriftDatabase(tables: [
+  Users,
+  Organizations,
+  Memberships,
+  OfficerTitles,
+  OrganizationPermissions,
+  MemberPermissions,
+  Events,
+  Attendance,
+  UserProfiles,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+
+  // Constructor for testing with in-memory database
+  AppDatabase.forTesting(super.e);
 
   @override
   int get schemaVersion => 4;
@@ -89,8 +132,18 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(users, users.role);
         }
         if (from < 3) {
-          // Migration from version 2 to 3: Add UserProfiles table
+          // Migration from version 2 to 3: Add new tables and columns
+          await m.createTable(officerTitles);
+          await m.createTable(organizationPermissions);
+          await m.createTable(memberPermissions);
           await m.createTable(userProfiles);
+          
+          // Update Events table structure
+          await m.deleteTable('events');
+          await m.createTable(events);
+          
+          // Add officerTitleId to Memberships
+          await m.addColumn(memberships, memberships.officerTitleId);
         }
         if (from < 4) {
           // Migration from version 3 to 4: Update UserProfiles structure

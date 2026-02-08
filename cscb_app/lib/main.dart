@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/di/locator.dart';
 import 'data/remote/supabase_service.dart';
+import 'data/local/services/permission_migration_service.dart';
 import 'screens/login_page.dart';
 
 void main() async {
@@ -11,6 +12,10 @@ void main() async {
 
   // Initialize Database and Repo
   await setupLocator();
+
+  // Run permission migration for existing organizations
+  final migrationService = getIt<PermissionMigrationService>();
+  await migrationService.initializePermissionsForExistingOrganizations();
 
   runApp(const MyApp());
 }

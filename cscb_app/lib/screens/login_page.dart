@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/di/locator.dart';
+import '../core/session/user_session.dart';
 import '../data/local/services/auth_service_with_remote.dart';
 import '../data/local/repositories/user_repository.dart';
 import '../data/remote/repositories/remote_user_repository.dart';
@@ -76,6 +77,16 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result.success) {
       _currentUser = result.user;
+      
+      // Set current user session
+      final userSession = getIt<UserSession>();
+      userSession.setCurrentUser(
+        userId: result.user!.id,
+        email: result.user!.email,
+        name: result.user!.name,
+        role: result.user!.role,
+      );
+      
       _navigateBasedOnRole(result.user!.role);
     } else {
       setState(() {
@@ -149,6 +160,15 @@ class _LoginPageState extends State<LoginPage> {
         } else {
           _currentUser = existingUser;
         }
+        
+        // Set current user session
+        final userSession = getIt<UserSession>();
+        userSession.setCurrentUser(
+          userId: result.userId!,
+          email: result.email!,
+          name: result.name ?? result.email!,
+          role: existingUser?.role ?? 'member',
+        );
         
         setState(() {
           _isLoading = false;

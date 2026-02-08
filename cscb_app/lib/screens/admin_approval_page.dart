@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:cscb_app/core/di/locator.dart';
+import 'package:cscb_app/core/session/user_session.dart';
 import 'package:cscb_app/data/local/repositories/org_repository.dart';
 import 'package:cscb_app/data/local/db/app_database.dart';
 import 'package:cscb_app/data/remote/repositories/remote_org_repository.dart';
@@ -54,17 +55,21 @@ class _AdminApprovalPageState extends State<AdminApprovalPage> {
   }
 
   Future<void> _approveOrganization(Organization org) async {
-    try {
-      await _orgRepo.approveOrganization(org.id);
-      if (mounted) {
+    final result = await _orgRepo.approveOrganization(org.id);
+    if (mounted) {
+      if (result.success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Approved: ${org.name}')),
+          SnackBar(
+            content: Text('Approved: ${org.name}'),
+            backgroundColor: Colors.green,
+          ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to approve: $e')),
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Failed to approve'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -91,17 +96,21 @@ class _AdminApprovalPageState extends State<AdminApprovalPage> {
     );
 
     if (confirm == true) {
-      try {
-        await _orgRepo.deleteOrganization(org.id);
-        if (mounted) {
+      final result = await _orgRepo.deleteOrganization(org.id);
+      if (mounted) {
+        if (result.success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Deleted: ${org.name}')),
+            SnackBar(
+              content: Text('Deleted: ${org.name}'),
+              backgroundColor: Colors.green,
+            ),
           );
-        }
-      } catch (e) {
-        if (mounted) {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: $e')),
+            SnackBar(
+              content: Text(result.errorMessage ?? 'Failed to delete'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -109,17 +118,21 @@ class _AdminApprovalPageState extends State<AdminApprovalPage> {
   }
 
   Future<void> _suspendOrganization(Organization org) async {
-    try {
-      await _orgRepo.suspendOrganization(org.id);
-      if (mounted) {
+    final result = await _orgRepo.suspendOrganization(org.id);
+    if (mounted) {
+      if (result.success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Suspended: ${org.name}')),
+          SnackBar(
+            content: Text('Suspended: ${org.name}'),
+            backgroundColor: Colors.orange,
+          ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to suspend: $e')),
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Failed to suspend'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -136,6 +149,10 @@ class _AdminApprovalPageState extends State<AdminApprovalPage> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
+              // Clear user session on logout
+              final userSession = getIt<UserSession>();
+              userSession.clearCurrentUser();
+              
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -184,90 +201,93 @@ class _AdminApprovalPageState extends State<AdminApprovalPage> {
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.lightBlue[100],
-                            child: const Icon(Icons.business, color: Colors.lightBlue),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  org.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(org.status),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    org.status.toUpperCase(),
+                child: InkWell(
+                  onTap: () => _showOrganizationDetails(org),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.lightBlue[100],
+                              child: const Icon(Icons.business, color: Colors.lightBlue),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    org.name,
                                     style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 18,
                                     ),
                                   ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(org.status),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      org.status.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (org.status == 'pending') ...[
+                              OutlinedButton.icon(
+                                onPressed: () => _approveOrganization(org),
+                                icon: const Icon(Icons.check_circle_outline),
+                                label: const Text('Approve'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.green,
                                 ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (org.status == 'pending') ...[
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            if (org.status == 'active') ...[
+                              OutlinedButton.icon(
+                                onPressed: () => _suspendOrganization(org),
+                                icon: const Icon(Icons.pause_circle_outline),
+                                label: const Text('Suspend'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.orange,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
                             OutlinedButton.icon(
-                              onPressed: () => _approveOrganization(org),
-                              icon: const Icon(Icons.check_circle_outline),
-                              label: const Text('Approve'),
+                              onPressed: () => _deleteOrganization(org),
+                              icon: const Icon(Icons.delete_outline),
+                              label: const Text('Delete'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.green,
+                                foregroundColor: Colors.red,
                               ),
                             ),
-                            const SizedBox(width: 8),
                           ],
-                          if (org.status == 'active') ...[
-                            OutlinedButton.icon(
-                              onPressed: () => _suspendOrganization(org),
-                              icon: const Icon(Icons.pause_circle_outline),
-                              label: const Text('Suspend'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.orange,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          OutlinedButton.icon(
-                            onPressed: () => _deleteOrganization(org),
-                            icon: const Icon(Icons.delete_outline),
-                            label: const Text('Delete'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -289,5 +309,82 @@ class _AdminApprovalPageState extends State<AdminApprovalPage> {
       default:
         return Colors.grey;
     }
+  }
+
+  Future<void> _showOrganizationDetails(Organization org) async {
+    // Get the president (creator) of the organization
+    final membership = await (_orgRepo.db.select(_orgRepo.db.memberships)
+          ..where((tbl) =>
+              tbl.orgId.equals(org.id) & tbl.role.equals('president')))
+        .getSingleOrNull();
+
+    String creatorInfo = 'Unknown';
+    if (membership != null) {
+      final user = await (_orgRepo.db.select(_orgRepo.db.users)
+            ..where((tbl) => tbl.id.equals(membership.userId)))
+          .getSingleOrNull();
+      if (user != null) {
+        creatorInfo = '${user.name} (${user.email})';
+      }
+    }
+
+    // Get member count
+    final memberCount = await (_orgRepo.db.select(_orgRepo.db.memberships)
+          ..where((tbl) =>
+              tbl.orgId.equals(org.id) & tbl.status.equals('approved')))
+        .get()
+        .then((list) => list.length);
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(org.name),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow('Status', org.status.toUpperCase()),
+              const SizedBox(height: 12),
+              _buildDetailRow('President', creatorInfo),
+              const SizedBox(height: 12),
+              _buildDetailRow('Members', memberCount.toString()),
+              const SizedBox(height: 12),
+              _buildDetailRow('Organization ID', org.id),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            '$label:',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
   }
 }
