@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isFormValid = false;
   bool _isLoading = false;
   String? _errorMessage;
+  User? _currentUser;
   
   late final AuthServiceWithRemote _authService;
   final _googleAuthService = GoogleAuthService();
@@ -74,6 +75,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (result.success) {
+      _currentUser = result.user;
       _navigateBasedOnRole(result.user!.role);
     } else {
       setState(() {
@@ -93,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
       // Navigate to main page for president/member
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
+        MaterialPageRoute(builder: (context) => MainPage(user: _currentUser!)),
       );
     }
   }
@@ -141,6 +143,11 @@ class _LoginPageState extends State<LoginPage> {
             'is_synced': true,
             'deleted': false,
           });
+          
+          // Fetch the created user
+          _currentUser = await userRepo.getUserByEmail(result.email!);
+        } else {
+          _currentUser = existingUser;
         }
         
         setState(() {
@@ -148,10 +155,12 @@ class _LoginPageState extends State<LoginPage> {
         });
         
         // Navigate to main page (Google users are regular users, not admins)
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainPage()),
-        );
+        if (_currentUser != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainPage(user: _currentUser!)),
+          );
+        }
       } catch (e) {
         setState(() {
           _isLoading = false;

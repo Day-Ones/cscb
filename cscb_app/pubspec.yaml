@@ -27,6 +27,9 @@ dependencies:
   
   # Google Sign-In
   google_sign_in: ^6.2.1
+  
+  # App Info
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:

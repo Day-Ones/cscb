@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import '../../data/local/db/app_database.dart';
 import '../../data/local/repositories/org_repository.dart';
 import '../../data/local/repositories/user_repository.dart';
+import '../../data/local/repositories/user_profile_repository.dart';
 import '../../data/local/services/auth_service_with_remote.dart';
 import '../../data/remote/repositories/remote_user_repository.dart';
 import '../../data/remote/repositories/remote_org_repository.dart';
@@ -24,6 +25,7 @@ Future<void> setupLocator() async {
     OrgRepository(db, getIt<RemoteOrgRepository>()),
   );
   getIt.registerSingleton<UserRepository>(UserRepository(db));
+  getIt.registerSingleton<UserProfileRepository>(UserProfileRepository(db));
 
   // 5. Register Services with remote support
   final authService = AuthServiceWithRemote(
