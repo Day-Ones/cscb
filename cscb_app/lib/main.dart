@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'core/di/locator.dart';
+import 'data/remote/supabase_service.dart';
 import 'screens/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase
+  await SupabaseService.initialize();
 
   // Initialize Database and Repo
   await setupLocator();

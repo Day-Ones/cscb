@@ -76,6 +76,28 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _passwordHashMeta = const VerificationMeta(
+    'passwordHash',
+  );
+  @override
+  late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
+    'password_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('member'),
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -85,6 +107,8 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     deleted,
     name,
     email,
+    passwordHash,
+    role,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -140,6 +164,23 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     } else if (isInserting) {
       context.missing(_emailMeta);
     }
+    if (data.containsKey('password_hash')) {
+      context.handle(
+        _passwordHashMeta,
+        passwordHash.isAcceptableOrUnknown(
+          data['password_hash']!,
+          _passwordHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_passwordHashMeta);
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
+    }
     return context;
   }
 
@@ -173,6 +214,14 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         DriftSqlType.string,
         data['${effectivePrefix}email'],
       )!,
+      passwordHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password_hash'],
+      )!,
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
     );
   }
 
@@ -189,6 +238,8 @@ class User extends DataClass implements Insertable<User> {
   final bool deleted;
   final String name;
   final String email;
+  final String passwordHash;
+  final String role;
   const User({
     required this.id,
     required this.isSynced,
@@ -196,6 +247,8 @@ class User extends DataClass implements Insertable<User> {
     required this.deleted,
     required this.name,
     required this.email,
+    required this.passwordHash,
+    required this.role,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -208,6 +261,8 @@ class User extends DataClass implements Insertable<User> {
     map['deleted'] = Variable<bool>(deleted);
     map['name'] = Variable<String>(name);
     map['email'] = Variable<String>(email);
+    map['password_hash'] = Variable<String>(passwordHash);
+    map['role'] = Variable<String>(role);
     return map;
   }
 
@@ -221,6 +276,8 @@ class User extends DataClass implements Insertable<User> {
       deleted: Value(deleted),
       name: Value(name),
       email: Value(email),
+      passwordHash: Value(passwordHash),
+      role: Value(role),
     );
   }
 
@@ -236,6 +293,8 @@ class User extends DataClass implements Insertable<User> {
       deleted: serializer.fromJson<bool>(json['deleted']),
       name: serializer.fromJson<String>(json['name']),
       email: serializer.fromJson<String>(json['email']),
+      passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      role: serializer.fromJson<String>(json['role']),
     );
   }
   @override
@@ -248,6 +307,8 @@ class User extends DataClass implements Insertable<User> {
       'deleted': serializer.toJson<bool>(deleted),
       'name': serializer.toJson<String>(name),
       'email': serializer.toJson<String>(email),
+      'passwordHash': serializer.toJson<String>(passwordHash),
+      'role': serializer.toJson<String>(role),
     };
   }
 
@@ -258,6 +319,8 @@ class User extends DataClass implements Insertable<User> {
     bool? deleted,
     String? name,
     String? email,
+    String? passwordHash,
+    String? role,
   }) => User(
     id: id ?? this.id,
     isSynced: isSynced ?? this.isSynced,
@@ -267,6 +330,8 @@ class User extends DataClass implements Insertable<User> {
     deleted: deleted ?? this.deleted,
     name: name ?? this.name,
     email: email ?? this.email,
+    passwordHash: passwordHash ?? this.passwordHash,
+    role: role ?? this.role,
   );
   User copyWithCompanion(UsersCompanion data) {
     return User(
@@ -278,6 +343,10 @@ class User extends DataClass implements Insertable<User> {
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       name: data.name.present ? data.name.value : this.name,
       email: data.email.present ? data.email.value : this.email,
+      passwordHash: data.passwordHash.present
+          ? data.passwordHash.value
+          : this.passwordHash,
+      role: data.role.present ? data.role.value : this.role,
     );
   }
 
@@ -289,14 +358,24 @@ class User extends DataClass implements Insertable<User> {
           ..write('clientUpdatedAt: $clientUpdatedAt, ')
           ..write('deleted: $deleted, ')
           ..write('name: $name, ')
-          ..write('email: $email')
+          ..write('email: $email, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('role: $role')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, isSynced, clientUpdatedAt, deleted, name, email);
+  int get hashCode => Object.hash(
+    id,
+    isSynced,
+    clientUpdatedAt,
+    deleted,
+    name,
+    email,
+    passwordHash,
+    role,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -306,7 +385,9 @@ class User extends DataClass implements Insertable<User> {
           other.clientUpdatedAt == this.clientUpdatedAt &&
           other.deleted == this.deleted &&
           other.name == this.name &&
-          other.email == this.email);
+          other.email == this.email &&
+          other.passwordHash == this.passwordHash &&
+          other.role == this.role);
 }
 
 class UsersCompanion extends UpdateCompanion<User> {
@@ -316,6 +397,8 @@ class UsersCompanion extends UpdateCompanion<User> {
   final Value<bool> deleted;
   final Value<String> name;
   final Value<String> email;
+  final Value<String> passwordHash;
+  final Value<String> role;
   final Value<int> rowid;
   const UsersCompanion({
     this.id = const Value.absent(),
@@ -324,6 +407,8 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.deleted = const Value.absent(),
     this.name = const Value.absent(),
     this.email = const Value.absent(),
+    this.passwordHash = const Value.absent(),
+    this.role = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UsersCompanion.insert({
@@ -333,10 +418,13 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.deleted = const Value.absent(),
     required String name,
     required String email,
+    required String passwordHash,
+    this.role = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
-       email = Value(email);
+       email = Value(email),
+       passwordHash = Value(passwordHash);
   static Insertable<User> custom({
     Expression<String>? id,
     Expression<bool>? isSynced,
@@ -344,6 +432,8 @@ class UsersCompanion extends UpdateCompanion<User> {
     Expression<bool>? deleted,
     Expression<String>? name,
     Expression<String>? email,
+    Expression<String>? passwordHash,
+    Expression<String>? role,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -353,6 +443,8 @@ class UsersCompanion extends UpdateCompanion<User> {
       if (deleted != null) 'deleted': deleted,
       if (name != null) 'name': name,
       if (email != null) 'email': email,
+      if (passwordHash != null) 'password_hash': passwordHash,
+      if (role != null) 'role': role,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -364,6 +456,8 @@ class UsersCompanion extends UpdateCompanion<User> {
     Value<bool>? deleted,
     Value<String>? name,
     Value<String>? email,
+    Value<String>? passwordHash,
+    Value<String>? role,
     Value<int>? rowid,
   }) {
     return UsersCompanion(
@@ -373,6 +467,8 @@ class UsersCompanion extends UpdateCompanion<User> {
       deleted: deleted ?? this.deleted,
       name: name ?? this.name,
       email: email ?? this.email,
+      passwordHash: passwordHash ?? this.passwordHash,
+      role: role ?? this.role,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -398,6 +494,12 @@ class UsersCompanion extends UpdateCompanion<User> {
     if (email.present) {
       map['email'] = Variable<String>(email.value);
     }
+    if (passwordHash.present) {
+      map['password_hash'] = Variable<String>(passwordHash.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -413,6 +515,8 @@ class UsersCompanion extends UpdateCompanion<User> {
           ..write('deleted: $deleted, ')
           ..write('name: $name, ')
           ..write('email: $email, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('role: $role, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2369,6 +2473,8 @@ typedef $$UsersTableCreateCompanionBuilder =
       Value<bool> deleted,
       required String name,
       required String email,
+      required String passwordHash,
+      Value<String> role,
       Value<int> rowid,
     });
 typedef $$UsersTableUpdateCompanionBuilder =
@@ -2379,6 +2485,8 @@ typedef $$UsersTableUpdateCompanionBuilder =
       Value<bool> deleted,
       Value<String> name,
       Value<String> email,
+      Value<String> passwordHash,
+      Value<String> role,
       Value<int> rowid,
     });
 
@@ -2458,6 +2566,16 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
 
   ColumnFilters<String> get email => $composableBuilder(
     column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get role => $composableBuilder(
+    column: $table.role,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2550,6 +2668,16 @@ class $$UsersTableOrderingComposer
     column: $table.email,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UsersTableAnnotationComposer
@@ -2580,6 +2708,14 @@ class $$UsersTableAnnotationComposer
 
   GeneratedColumn<String> get email =>
       $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
 
   Expression<T> membershipsRefs<T extends Object>(
     Expression<T> Function($$MembershipsTableAnnotationComposer a) f,
@@ -2666,6 +2802,8 @@ class $$UsersTableTableManager
                 Value<bool> deleted = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> email = const Value.absent(),
+                Value<String> passwordHash = const Value.absent(),
+                Value<String> role = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UsersCompanion(
                 id: id,
@@ -2674,6 +2812,8 @@ class $$UsersTableTableManager
                 deleted: deleted,
                 name: name,
                 email: email,
+                passwordHash: passwordHash,
+                role: role,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2684,6 +2824,8 @@ class $$UsersTableTableManager
                 Value<bool> deleted = const Value.absent(),
                 required String name,
                 required String email,
+                required String passwordHash,
+                Value<String> role = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UsersCompanion.insert(
                 id: id,
@@ -2692,6 +2834,8 @@ class $$UsersTableTableManager
                 deleted: deleted,
                 name: name,
                 email: email,
+                passwordHash: passwordHash,
+                role: role,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

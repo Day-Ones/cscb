@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:drift/drift.dart' hide Column;
 
 // ✅ FIX: Absolute imports ensure we find the generated classes
 import 'package:cscb_app/core/di/locator.dart';
 import 'package:cscb_app/data/local/repositories/org_repository.dart';
+import 'package:cscb_app/data/remote/repositories/remote_org_repository.dart';
 import 'package:cscb_app/data/local/db/app_database.dart';
+import 'login_page.dart';
 
 class OrganizationPage extends StatefulWidget {
   const OrganizationPage({super.key});
@@ -19,6 +22,37 @@ class _OrganizationPageState extends State<OrganizationPage> {
   final _orgRepo = getIt<OrgRepository>();
 
   final _orgNameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load organizations from Supabase on startup
+    _loadOrganizationsFromSupabase();
+  }
+
+  Future<void> _loadOrganizationsFromSupabase() async {
+    try {
+      final remoteRepo = getIt<RemoteOrgRepository>();
+      final database = getIt<AppDatabase>();
+      final orgs = await remoteRepo.getAllOrganizations();
+      
+      // Sync each organization to local database
+      for (final org in orgs) {
+        await database.into(database.organizations).insert(
+          OrganizationsCompanion.insert(
+            id: org['id'] as String,
+            name: org['name'] as String,
+            status: Value(org['status'] as String? ?? 'pending'),
+            isSynced: const Value(true),
+            deleted: Value(org['deleted'] as bool? ?? false),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+      }
+    } catch (e) {
+      print('Failed to load organizations from Supabase: $e');
+    }
+  }
 
   void _createOrganization() {
     showDialog(
@@ -71,6 +105,19 @@ class _OrganizationPageState extends State<OrganizationPage> {
         title: const Text('Organization'),
         backgroundColor: Colors.lightBlue,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Row(

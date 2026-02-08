@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import '../core/di/locator.dart';
+import '../data/local/services/auth_service_with_remote.dart';
+import '../data/local/repositories/user_repository.dart';
+import '../data/remote/repositories/remote_user_repository.dart';
+import '../data/remote/services/google_auth_service.dart';
+import '../data/local/db/app_database.dart';
+import 'package:drift/drift.dart' hide Column;
 import 'main_page.dart';
+import 'admin_approval_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,10 +21,16 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isFormValid = false;
+  bool _isLoading = false;
+  String? _errorMessage;
+  
+  late final AuthServiceWithRemote _authService;
+  final _googleAuthService = GoogleAuthService();
 
   @override
   void initState() {
     super.initState();
+    _authService = getIt<AuthServiceWithRemote>();
     _usernameController.addListener(_validateForm);
     _passwordController.addListener(_validateForm);
   }
@@ -26,6 +40,10 @@ class _LoginPageState extends State<LoginPage> {
       _isFormValid =
           _usernameController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty;
+      // Clear error message when user modifies input
+      if (_errorMessage != null) {
+        _errorMessage = null;
+      }
     });
   }
 
@@ -36,12 +54,115 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _signIn() {
-    if (_isFormValid) {
+  Future<void> _signIn() async {
+    if (!_isFormValid) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await _authService.authenticate(
+      _usernameController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result.success) {
+      _navigateBasedOnRole(result.user!.role);
+    } else {
+      setState(() {
+        _errorMessage = result.errorMessage;
+      });
+    }
+  }
+
+  void _navigateBasedOnRole(String role) {
+    if (role == 'super_admin') {
+      // Navigate to admin approval page for super admin
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminApprovalPage()),
+      );
+    } else {
+      // Navigate to main page for president/member
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainPage()),
       );
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await _googleAuthService.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (result.success) {
+      // Create/update user in database
+      try {
+        final userRepo = getIt<UserRepository>();
+        final remoteUserRepo = getIt<RemoteUserRepository>();
+        
+        // Check if user already exists
+        final existingUser = await userRepo.getUserByEmail(result.email!);
+        
+        if (existingUser == null) {
+          // Create new user locally
+          final newUser = UsersCompanion(
+            id: Value(result.userId!),
+            email: Value(result.email!),
+            name: Value(result.name ?? result.email!),
+            role: const Value('member'), // Google users are members by default
+            passwordHash: const Value(''), // No password for Google users
+            isSynced: const Value(false),
+            deleted: const Value(false),
+          );
+          
+          await userRepo.createUser(newUser);
+          
+          // Sync to Supabase
+          await remoteUserRepo.createUser({
+            'id': result.userId!,
+            'email': result.email!,
+            'name': result.name ?? result.email!,
+            'role': 'member',
+            'password_hash': '',
+            'is_synced': true,
+            'deleted': false,
+          });
+        }
+        
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Navigate to main page (Google users are regular users, not admins)
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainPage()),
+        );
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to create user: $e';
+        });
+      }
+    } else {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = result.errorMessage;
+      });
     }
   }
 
@@ -127,25 +248,81 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: _isFormValid ? _signIn : null,
+                onPressed: (_isFormValid && !_isLoading) ? _signIn : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isFormValid
+                  backgroundColor: (_isFormValid && !_isLoading)
                       ? Colors.lightBlue
                       : Colors.grey[300],
-                  foregroundColor: _isFormValid
+                  foregroundColor: (_isFormValid && !_isLoading)
                       ? Colors.white
                       : Colors.grey[500],
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  elevation: _isFormValid ? 2 : 0,
+                  elevation: (_isFormValid && !_isLoading) ? 2 : 0,
                 ),
-                child: const Text(
-                  'Sign In',
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Sign In',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey[400])),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey[400])),
+                ],
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : _signInWithGoogle,
+                icon: Image.network(
+                  'https://www.google.com/favicon.ico',
+                  height: 24,
+                  width: 24,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 24),
+                ),
+                label: const Text(
+                  'Sign in with Google',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  side: BorderSide(color: Colors.grey[300]!),
                 ),
               ),
             ],

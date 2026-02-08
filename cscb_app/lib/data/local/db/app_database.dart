@@ -18,7 +18,9 @@ mixin SyncableTable on Table {
 // --- TABLES ---
 class Users extends Table with SyncableTable {
   TextColumn get name => text()();
-  TextColumn get email => text()();
+  TextColumn get email => text().unique()();
+  TextColumn get passwordHash => text()();
+  TextColumn get role => text().withDefault(const Constant('member'))();
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -62,7 +64,23 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (Migrator m) async {
+        await m.createAll();
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          // Migration from version 1 to 2: Add passwordHash and role columns
+          await m.addColumn(users, users.passwordHash);
+          await m.addColumn(users, users.role);
+        }
+      },
+    );
+  }
 }
 
 LazyDatabase _openConnection() {
