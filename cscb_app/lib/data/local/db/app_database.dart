@@ -82,6 +82,11 @@ class Events extends Table with SyncableTable {
 class Attendance extends Table with SyncableTable {
   TextColumn get eventId => text().references(Events, #id)();
   TextColumn get userId => text().references(Users, #id)();
+  TextColumn get studentNumber => text()();
+  TextColumn get lastName => text()();
+  TextColumn get firstName => text()();
+  TextColumn get program => text()();
+  IntColumn get yearLevel => integer()();
   DateTimeColumn get timestamp => dateTime()();
   TextColumn get status => text().withDefault(const Constant('present'))();
   @override
@@ -90,10 +95,17 @@ class Attendance extends Table with SyncableTable {
 
 class UserProfiles extends Table with SyncableTable {
   TextColumn get userId => text().references(Users, #id)();
-  TextColumn get name => text()();
-  TextColumn get program => text()();
-  IntColumn get yearLevel => integer()();
-  IntColumn get section => integer()();
+  TextColumn get googleId => text().unique().nullable()();
+  TextColumn get studentNumber => text().nullable()();
+  TextColumn get firstName => text().nullable()();
+  TextColumn get lastName => text().nullable()();
+  TextColumn get fullName => text().nullable()();
+  TextColumn get program => text().nullable()();
+  IntColumn get yearLevel => integer().nullable()();
+  TextColumn get section => text().nullable()();
+  BoolColumn get isComplete => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -117,7 +129,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -150,6 +162,17 @@ class AppDatabase extends _$AppDatabase {
           // Drop and recreate the table with new schema
           await m.deleteTable('user_profiles');
           await m.createTable(userProfiles);
+        }
+        if (from < 5) {
+          // Migration from version 4 to 5: Enhanced UserProfiles for Google Auth
+          // Drop and recreate with new fields
+          await m.deleteTable('user_profiles');
+          await m.createTable(userProfiles);
+        }
+        if (from < 6) {
+          // Migration from version 5 to 6: Enhanced Attendance with student details
+          await m.deleteTable('attendance');
+          await m.createTable(attendance);
         }
       },
     );
