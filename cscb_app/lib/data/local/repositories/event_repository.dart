@@ -4,6 +4,7 @@ import 'package:cscb_app/data/local/db/app_database.dart';
 import 'package:cscb_app/core/session/user_session.dart';
 import 'package:cscb_app/core/models/result.dart';
 import 'package:cscb_app/core/models/event_model.dart';
+import 'package:cscb_app/core/models/student_attendance.dart';
 
 class EventRepository {
   final AppDatabase db;
@@ -11,7 +12,104 @@ class EventRepository {
 
   EventRepository(this.db, this._userSession);
 
-  /// Create a new event
+  /// Get all events (for simplified app without org filtering)
+  Future<List<Event>> getAllEvents() async {
+    final query = db.select(db.events)
+      ..where((tbl) => tbl.deleted.equals(false))
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.eventDate)]);
+
+    return await query.get();
+  }
+
+  /// Get attendance count for an event
+  Future<int> getAttendanceCount(String eventId) async {
+    final query = db.selectOnly(db.attendance)
+      ..addColumns([db.attendance.id.count()])
+      ..where(
+        db.attendance.eventId.equals(eventId) &
+            db.attendance.deleted.equals(false),
+      );
+
+    final result = await query.getSingle();
+    return result.read(db.attendance.id.count()) ?? 0;
+  }
+
+  /// Record attendance for a student at an event from QR code
+  Future<Result<StudentAttendance>> recordStudentAttendance({
+    required String eventId,
+    required String qrData,
+  }) async {
+    try {
+      final attendanceId = const Uuid().v4();
+      
+      // Parse QR code data
+      final studentData = StudentAttendance.fromQRCode(qrData, eventId, attendanceId);
+      if (studentData == null) {
+        return Result.failure('Invalid QR code format. Expected: studentNo|lastName|firstName|program|yearLevel');
+      }
+
+      // Check if already attended
+      final existing = await (db.select(db.attendance)
+            ..where((tbl) =>
+                tbl.eventId.equals(eventId) &
+                tbl.studentNumber.equals(studentData.studentNumber) &
+                tbl.deleted.equals(false)))
+          .getSingleOrNull();
+
+      if (existing != null) {
+        return Result.failure('${studentData.fullName} has already checked in');
+      }
+
+      // Record attendance with student details
+      await db.into(db.attendance).insert(
+            AttendanceCompanion.insert(
+              id: attendanceId,
+              eventId: eventId,
+              userId: studentData.studentNumber, // Use student number as userId
+              studentNumber: studentData.studentNumber,
+              lastName: studentData.lastName,
+              firstName: studentData.firstName,
+              program: studentData.program,
+              yearLevel: studentData.yearLevel,
+              timestamp: DateTime.now(),
+              status: const Value('present'),
+            ),
+          );
+
+      return Result.success(studentData);
+    } catch (e) {
+      return Result.failure('Failed to record attendance: $e');
+    }
+  }
+
+  /// Get attendance list with student details
+  Future<List<StudentAttendance>> getStudentAttendanceList(String eventId) async {
+    final query = db.select(db.attendance)
+      ..where((tbl) =>
+          tbl.eventId.equals(eventId) & tbl.deleted.equals(false))
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.timestamp)]);
+
+    final records = await query.get();
+    
+    return records.map((record) => StudentAttendance(
+      id: record.id,
+      eventId: record.eventId,
+      studentNumber: record.studentNumber,
+      lastName: record.lastName,
+      firstName: record.firstName,
+      program: record.program,
+      yearLevel: record.yearLevel,
+      timestamp: record.timestamp,
+      status: record.status,
+    )).toList();
+  }
+
+  /// Create a new event (simplified version)
+  Future<void> createEventSimple(EventsCompanion event) async {
+    await db.into(db.events).insert(event);
+  }
+
+  /// Create a new event with full details
   /// Requirements: 3.5, 12.1
   Future<Result<String>> createEvent({
     required String orgId,

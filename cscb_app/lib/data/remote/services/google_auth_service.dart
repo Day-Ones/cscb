@@ -61,6 +61,8 @@ class GoogleAuthResult {
   final String? userId;
   final String? email;
   final String? name;
+  final String? firstName;
+  final String? lastName;
   final String? photoUrl;
   final String? idToken;
   final String? accessToken;
@@ -74,6 +76,8 @@ class GoogleAuthResult {
     this.idToken,
     this.accessToken,
   })  : success = true,
+        firstName = _parseFirstName(name),
+        lastName = _parseLastName(name),
         errorMessage = null;
 
   GoogleAuthResult.failure(this.errorMessage)
@@ -81,7 +85,24 @@ class GoogleAuthResult {
         userId = null,
         email = null,
         name = null,
+        firstName = null,
+        lastName = null,
         photoUrl = null,
         idToken = null,
         accessToken = null;
+
+  /// Parse first name from full name (everything before first space)
+  static String? _parseFirstName(String? fullName) {
+    if (fullName == null || fullName.trim().isEmpty) return null;
+    final parts = fullName.trim().split(' ');
+    return parts.first;
+  }
+
+  /// Parse last name from full name (everything after first space)
+  static String? _parseLastName(String? fullName) {
+    if (fullName == null || fullName.trim().isEmpty) return null;
+    final parts = fullName.trim().split(' ');
+    if (parts.length <= 1) return null;
+    return parts.sublist(1).join(' ');
+  }
 }

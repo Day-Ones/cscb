@@ -3780,6 +3780,61 @@ class $AttendanceTable extends Attendance
       'REFERENCES users (id)',
     ),
   );
+  static const VerificationMeta _studentNumberMeta = const VerificationMeta(
+    'studentNumber',
+  );
+  @override
+  late final GeneratedColumn<String> studentNumber = GeneratedColumn<String>(
+    'student_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastNameMeta = const VerificationMeta(
+    'lastName',
+  );
+  @override
+  late final GeneratedColumn<String> lastName = GeneratedColumn<String>(
+    'last_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstNameMeta = const VerificationMeta(
+    'firstName',
+  );
+  @override
+  late final GeneratedColumn<String> firstName = GeneratedColumn<String>(
+    'first_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _programMeta = const VerificationMeta(
+    'program',
+  );
+  @override
+  late final GeneratedColumn<String> program = GeneratedColumn<String>(
+    'program',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _yearLevelMeta = const VerificationMeta(
+    'yearLevel',
+  );
+  @override
+  late final GeneratedColumn<int> yearLevel = GeneratedColumn<int>(
+    'year_level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _timestampMeta = const VerificationMeta(
     'timestamp',
   );
@@ -3809,6 +3864,11 @@ class $AttendanceTable extends Attendance
     deleted,
     eventId,
     userId,
+    studentNumber,
+    lastName,
+    firstName,
+    program,
+    yearLevel,
     timestamp,
     status,
   ];
@@ -3866,6 +3926,49 @@ class $AttendanceTable extends Attendance
     } else if (isInserting) {
       context.missing(_userIdMeta);
     }
+    if (data.containsKey('student_number')) {
+      context.handle(
+        _studentNumberMeta,
+        studentNumber.isAcceptableOrUnknown(
+          data['student_number']!,
+          _studentNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_studentNumberMeta);
+    }
+    if (data.containsKey('last_name')) {
+      context.handle(
+        _lastNameMeta,
+        lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lastNameMeta);
+    }
+    if (data.containsKey('first_name')) {
+      context.handle(
+        _firstNameMeta,
+        firstName.isAcceptableOrUnknown(data['first_name']!, _firstNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_firstNameMeta);
+    }
+    if (data.containsKey('program')) {
+      context.handle(
+        _programMeta,
+        program.isAcceptableOrUnknown(data['program']!, _programMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_programMeta);
+    }
+    if (data.containsKey('year_level')) {
+      context.handle(
+        _yearLevelMeta,
+        yearLevel.isAcceptableOrUnknown(data['year_level']!, _yearLevelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_yearLevelMeta);
+    }
     if (data.containsKey('timestamp')) {
       context.handle(
         _timestampMeta,
@@ -3913,6 +4016,26 @@ class $AttendanceTable extends Attendance
         DriftSqlType.string,
         data['${effectivePrefix}user_id'],
       )!,
+      studentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_number'],
+      )!,
+      lastName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_name'],
+      )!,
+      firstName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_name'],
+      )!,
+      program: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}program'],
+      )!,
+      yearLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}year_level'],
+      )!,
       timestamp: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}timestamp'],
@@ -3937,6 +4060,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
   final bool deleted;
   final String eventId;
   final String userId;
+  final String studentNumber;
+  final String lastName;
+  final String firstName;
+  final String program;
+  final int yearLevel;
   final DateTime timestamp;
   final String status;
   const AttendanceData({
@@ -3946,6 +4074,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     required this.deleted,
     required this.eventId,
     required this.userId,
+    required this.studentNumber,
+    required this.lastName,
+    required this.firstName,
+    required this.program,
+    required this.yearLevel,
     required this.timestamp,
     required this.status,
   });
@@ -3960,6 +4093,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     map['deleted'] = Variable<bool>(deleted);
     map['event_id'] = Variable<String>(eventId);
     map['user_id'] = Variable<String>(userId);
+    map['student_number'] = Variable<String>(studentNumber);
+    map['last_name'] = Variable<String>(lastName);
+    map['first_name'] = Variable<String>(firstName);
+    map['program'] = Variable<String>(program);
+    map['year_level'] = Variable<int>(yearLevel);
     map['timestamp'] = Variable<DateTime>(timestamp);
     map['status'] = Variable<String>(status);
     return map;
@@ -3975,6 +4113,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
       deleted: Value(deleted),
       eventId: Value(eventId),
       userId: Value(userId),
+      studentNumber: Value(studentNumber),
+      lastName: Value(lastName),
+      firstName: Value(firstName),
+      program: Value(program),
+      yearLevel: Value(yearLevel),
       timestamp: Value(timestamp),
       status: Value(status),
     );
@@ -3992,6 +4135,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
       deleted: serializer.fromJson<bool>(json['deleted']),
       eventId: serializer.fromJson<String>(json['eventId']),
       userId: serializer.fromJson<String>(json['userId']),
+      studentNumber: serializer.fromJson<String>(json['studentNumber']),
+      lastName: serializer.fromJson<String>(json['lastName']),
+      firstName: serializer.fromJson<String>(json['firstName']),
+      program: serializer.fromJson<String>(json['program']),
+      yearLevel: serializer.fromJson<int>(json['yearLevel']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       status: serializer.fromJson<String>(json['status']),
     );
@@ -4006,6 +4154,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
       'deleted': serializer.toJson<bool>(deleted),
       'eventId': serializer.toJson<String>(eventId),
       'userId': serializer.toJson<String>(userId),
+      'studentNumber': serializer.toJson<String>(studentNumber),
+      'lastName': serializer.toJson<String>(lastName),
+      'firstName': serializer.toJson<String>(firstName),
+      'program': serializer.toJson<String>(program),
+      'yearLevel': serializer.toJson<int>(yearLevel),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'status': serializer.toJson<String>(status),
     };
@@ -4018,6 +4171,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     bool? deleted,
     String? eventId,
     String? userId,
+    String? studentNumber,
+    String? lastName,
+    String? firstName,
+    String? program,
+    int? yearLevel,
     DateTime? timestamp,
     String? status,
   }) => AttendanceData(
@@ -4029,6 +4187,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     deleted: deleted ?? this.deleted,
     eventId: eventId ?? this.eventId,
     userId: userId ?? this.userId,
+    studentNumber: studentNumber ?? this.studentNumber,
+    lastName: lastName ?? this.lastName,
+    firstName: firstName ?? this.firstName,
+    program: program ?? this.program,
+    yearLevel: yearLevel ?? this.yearLevel,
     timestamp: timestamp ?? this.timestamp,
     status: status ?? this.status,
   );
@@ -4042,6 +4205,13 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       eventId: data.eventId.present ? data.eventId.value : this.eventId,
       userId: data.userId.present ? data.userId.value : this.userId,
+      studentNumber: data.studentNumber.present
+          ? data.studentNumber.value
+          : this.studentNumber,
+      lastName: data.lastName.present ? data.lastName.value : this.lastName,
+      firstName: data.firstName.present ? data.firstName.value : this.firstName,
+      program: data.program.present ? data.program.value : this.program,
+      yearLevel: data.yearLevel.present ? data.yearLevel.value : this.yearLevel,
       timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
       status: data.status.present ? data.status.value : this.status,
     );
@@ -4056,6 +4226,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
           ..write('deleted: $deleted, ')
           ..write('eventId: $eventId, ')
           ..write('userId: $userId, ')
+          ..write('studentNumber: $studentNumber, ')
+          ..write('lastName: $lastName, ')
+          ..write('firstName: $firstName, ')
+          ..write('program: $program, ')
+          ..write('yearLevel: $yearLevel, ')
           ..write('timestamp: $timestamp, ')
           ..write('status: $status')
           ..write(')'))
@@ -4070,6 +4245,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     deleted,
     eventId,
     userId,
+    studentNumber,
+    lastName,
+    firstName,
+    program,
+    yearLevel,
     timestamp,
     status,
   );
@@ -4083,6 +4263,11 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
           other.deleted == this.deleted &&
           other.eventId == this.eventId &&
           other.userId == this.userId &&
+          other.studentNumber == this.studentNumber &&
+          other.lastName == this.lastName &&
+          other.firstName == this.firstName &&
+          other.program == this.program &&
+          other.yearLevel == this.yearLevel &&
           other.timestamp == this.timestamp &&
           other.status == this.status);
 }
@@ -4094,6 +4279,11 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
   final Value<bool> deleted;
   final Value<String> eventId;
   final Value<String> userId;
+  final Value<String> studentNumber;
+  final Value<String> lastName;
+  final Value<String> firstName;
+  final Value<String> program;
+  final Value<int> yearLevel;
   final Value<DateTime> timestamp;
   final Value<String> status;
   final Value<int> rowid;
@@ -4104,6 +4294,11 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     this.deleted = const Value.absent(),
     this.eventId = const Value.absent(),
     this.userId = const Value.absent(),
+    this.studentNumber = const Value.absent(),
+    this.lastName = const Value.absent(),
+    this.firstName = const Value.absent(),
+    this.program = const Value.absent(),
+    this.yearLevel = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.status = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4115,12 +4310,22 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     this.deleted = const Value.absent(),
     required String eventId,
     required String userId,
+    required String studentNumber,
+    required String lastName,
+    required String firstName,
+    required String program,
+    required int yearLevel,
     required DateTime timestamp,
     this.status = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        eventId = Value(eventId),
        userId = Value(userId),
+       studentNumber = Value(studentNumber),
+       lastName = Value(lastName),
+       firstName = Value(firstName),
+       program = Value(program),
+       yearLevel = Value(yearLevel),
        timestamp = Value(timestamp);
   static Insertable<AttendanceData> custom({
     Expression<String>? id,
@@ -4129,6 +4334,11 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     Expression<bool>? deleted,
     Expression<String>? eventId,
     Expression<String>? userId,
+    Expression<String>? studentNumber,
+    Expression<String>? lastName,
+    Expression<String>? firstName,
+    Expression<String>? program,
+    Expression<int>? yearLevel,
     Expression<DateTime>? timestamp,
     Expression<String>? status,
     Expression<int>? rowid,
@@ -4140,6 +4350,11 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
       if (deleted != null) 'deleted': deleted,
       if (eventId != null) 'event_id': eventId,
       if (userId != null) 'user_id': userId,
+      if (studentNumber != null) 'student_number': studentNumber,
+      if (lastName != null) 'last_name': lastName,
+      if (firstName != null) 'first_name': firstName,
+      if (program != null) 'program': program,
+      if (yearLevel != null) 'year_level': yearLevel,
       if (timestamp != null) 'timestamp': timestamp,
       if (status != null) 'status': status,
       if (rowid != null) 'rowid': rowid,
@@ -4153,6 +4368,11 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     Value<bool>? deleted,
     Value<String>? eventId,
     Value<String>? userId,
+    Value<String>? studentNumber,
+    Value<String>? lastName,
+    Value<String>? firstName,
+    Value<String>? program,
+    Value<int>? yearLevel,
     Value<DateTime>? timestamp,
     Value<String>? status,
     Value<int>? rowid,
@@ -4164,6 +4384,11 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
       deleted: deleted ?? this.deleted,
       eventId: eventId ?? this.eventId,
       userId: userId ?? this.userId,
+      studentNumber: studentNumber ?? this.studentNumber,
+      lastName: lastName ?? this.lastName,
+      firstName: firstName ?? this.firstName,
+      program: program ?? this.program,
+      yearLevel: yearLevel ?? this.yearLevel,
       timestamp: timestamp ?? this.timestamp,
       status: status ?? this.status,
       rowid: rowid ?? this.rowid,
@@ -4191,6 +4416,21 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     if (userId.present) {
       map['user_id'] = Variable<String>(userId.value);
     }
+    if (studentNumber.present) {
+      map['student_number'] = Variable<String>(studentNumber.value);
+    }
+    if (lastName.present) {
+      map['last_name'] = Variable<String>(lastName.value);
+    }
+    if (firstName.present) {
+      map['first_name'] = Variable<String>(firstName.value);
+    }
+    if (program.present) {
+      map['program'] = Variable<String>(program.value);
+    }
+    if (yearLevel.present) {
+      map['year_level'] = Variable<int>(yearLevel.value);
+    }
     if (timestamp.present) {
       map['timestamp'] = Variable<DateTime>(timestamp.value);
     }
@@ -4212,6 +4452,11 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
           ..write('deleted: $deleted, ')
           ..write('eventId: $eventId, ')
           ..write('userId: $userId, ')
+          ..write('studentNumber: $studentNumber, ')
+          ..write('lastName: $lastName, ')
+          ..write('firstName: $firstName, ')
+          ..write('program: $program, ')
+          ..write('yearLevel: $yearLevel, ')
           ..write('timestamp: $timestamp, ')
           ..write('status: $status, ')
           ..write('rowid: $rowid')
@@ -4289,14 +4534,61 @@ class $UserProfilesTable extends UserProfiles
       'REFERENCES users (id)',
     ),
   );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  static const VerificationMeta _googleIdMeta = const VerificationMeta(
+    'googleId',
+  );
   @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
+  late final GeneratedColumn<String> googleId = GeneratedColumn<String>(
+    'google_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _studentNumberMeta = const VerificationMeta(
+    'studentNumber',
+  );
+  @override
+  late final GeneratedColumn<String> studentNumber = GeneratedColumn<String>(
+    'student_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _firstNameMeta = const VerificationMeta(
+    'firstName',
+  );
+  @override
+  late final GeneratedColumn<String> firstName = GeneratedColumn<String>(
+    'first_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastNameMeta = const VerificationMeta(
+    'lastName',
+  );
+  @override
+  late final GeneratedColumn<String> lastName = GeneratedColumn<String>(
+    'last_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fullNameMeta = const VerificationMeta(
+    'fullName',
+  );
+  @override
+  late final GeneratedColumn<String> fullName = GeneratedColumn<String>(
+    'full_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _programMeta = const VerificationMeta(
     'program',
@@ -4305,9 +4597,9 @@ class $UserProfilesTable extends UserProfiles
   late final GeneratedColumn<String> program = GeneratedColumn<String>(
     'program',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _yearLevelMeta = const VerificationMeta(
     'yearLevel',
@@ -4316,20 +4608,59 @@ class $UserProfilesTable extends UserProfiles
   late final GeneratedColumn<int> yearLevel = GeneratedColumn<int>(
     'year_level',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _sectionMeta = const VerificationMeta(
     'section',
   );
   @override
-  late final GeneratedColumn<int> section = GeneratedColumn<int>(
+  late final GeneratedColumn<String> section = GeneratedColumn<String>(
     'section',
     aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isCompleteMeta = const VerificationMeta(
+    'isComplete',
+  );
+  @override
+  late final GeneratedColumn<bool> isComplete = GeneratedColumn<bool>(
+    'is_complete',
+    aliasedName,
     false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_complete" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -4338,10 +4669,17 @@ class $UserProfilesTable extends UserProfiles
     clientUpdatedAt,
     deleted,
     userId,
-    name,
+    googleId,
+    studentNumber,
+    firstName,
+    lastName,
+    fullName,
     program,
     yearLevel,
     section,
+    isComplete,
+    createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4389,37 +4727,74 @@ class $UserProfilesTable extends UserProfiles
     } else if (isInserting) {
       context.missing(_userIdMeta);
     }
-    if (data.containsKey('name')) {
+    if (data.containsKey('google_id')) {
       context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+        _googleIdMeta,
+        googleId.isAcceptableOrUnknown(data['google_id']!, _googleIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
+    }
+    if (data.containsKey('student_number')) {
+      context.handle(
+        _studentNumberMeta,
+        studentNumber.isAcceptableOrUnknown(
+          data['student_number']!,
+          _studentNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('first_name')) {
+      context.handle(
+        _firstNameMeta,
+        firstName.isAcceptableOrUnknown(data['first_name']!, _firstNameMeta),
+      );
+    }
+    if (data.containsKey('last_name')) {
+      context.handle(
+        _lastNameMeta,
+        lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta),
+      );
+    }
+    if (data.containsKey('full_name')) {
+      context.handle(
+        _fullNameMeta,
+        fullName.isAcceptableOrUnknown(data['full_name']!, _fullNameMeta),
+      );
     }
     if (data.containsKey('program')) {
       context.handle(
         _programMeta,
         program.isAcceptableOrUnknown(data['program']!, _programMeta),
       );
-    } else if (isInserting) {
-      context.missing(_programMeta);
     }
     if (data.containsKey('year_level')) {
       context.handle(
         _yearLevelMeta,
         yearLevel.isAcceptableOrUnknown(data['year_level']!, _yearLevelMeta),
       );
-    } else if (isInserting) {
-      context.missing(_yearLevelMeta);
     }
     if (data.containsKey('section')) {
       context.handle(
         _sectionMeta,
         section.isAcceptableOrUnknown(data['section']!, _sectionMeta),
       );
-    } else if (isInserting) {
-      context.missing(_sectionMeta);
+    }
+    if (data.containsKey('is_complete')) {
+      context.handle(
+        _isCompleteMeta,
+        isComplete.isAcceptableOrUnknown(data['is_complete']!, _isCompleteMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
     }
     return context;
   }
@@ -4450,21 +4825,49 @@ class $UserProfilesTable extends UserProfiles
         DriftSqlType.string,
         data['${effectivePrefix}user_id'],
       )!,
-      name: attachedDatabase.typeMapping.read(
+      googleId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
+        data['${effectivePrefix}google_id'],
+      ),
+      studentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_number'],
+      ),
+      firstName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_name'],
+      ),
+      lastName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_name'],
+      ),
+      fullName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}full_name'],
+      ),
       program: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}program'],
-      )!,
+      ),
       yearLevel: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}year_level'],
-      )!,
+      ),
       section: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}section'],
+      ),
+      isComplete: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_complete'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
       )!,
     );
   }
@@ -4481,20 +4884,34 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
   final DateTime? clientUpdatedAt;
   final bool deleted;
   final String userId;
-  final String name;
-  final String program;
-  final int yearLevel;
-  final int section;
+  final String? googleId;
+  final String? studentNumber;
+  final String? firstName;
+  final String? lastName;
+  final String? fullName;
+  final String? program;
+  final int? yearLevel;
+  final String? section;
+  final bool isComplete;
+  final DateTime createdAt;
+  final DateTime updatedAt;
   const UserProfile({
     required this.id,
     required this.isSynced,
     this.clientUpdatedAt,
     required this.deleted,
     required this.userId,
-    required this.name,
-    required this.program,
-    required this.yearLevel,
-    required this.section,
+    this.googleId,
+    this.studentNumber,
+    this.firstName,
+    this.lastName,
+    this.fullName,
+    this.program,
+    this.yearLevel,
+    this.section,
+    required this.isComplete,
+    required this.createdAt,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4506,10 +4923,33 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
     }
     map['deleted'] = Variable<bool>(deleted);
     map['user_id'] = Variable<String>(userId);
-    map['name'] = Variable<String>(name);
-    map['program'] = Variable<String>(program);
-    map['year_level'] = Variable<int>(yearLevel);
-    map['section'] = Variable<int>(section);
+    if (!nullToAbsent || googleId != null) {
+      map['google_id'] = Variable<String>(googleId);
+    }
+    if (!nullToAbsent || studentNumber != null) {
+      map['student_number'] = Variable<String>(studentNumber);
+    }
+    if (!nullToAbsent || firstName != null) {
+      map['first_name'] = Variable<String>(firstName);
+    }
+    if (!nullToAbsent || lastName != null) {
+      map['last_name'] = Variable<String>(lastName);
+    }
+    if (!nullToAbsent || fullName != null) {
+      map['full_name'] = Variable<String>(fullName);
+    }
+    if (!nullToAbsent || program != null) {
+      map['program'] = Variable<String>(program);
+    }
+    if (!nullToAbsent || yearLevel != null) {
+      map['year_level'] = Variable<int>(yearLevel);
+    }
+    if (!nullToAbsent || section != null) {
+      map['section'] = Variable<String>(section);
+    }
+    map['is_complete'] = Variable<bool>(isComplete);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
@@ -4522,10 +4962,33 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
           : Value(clientUpdatedAt),
       deleted: Value(deleted),
       userId: Value(userId),
-      name: Value(name),
-      program: Value(program),
-      yearLevel: Value(yearLevel),
-      section: Value(section),
+      googleId: googleId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(googleId),
+      studentNumber: studentNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(studentNumber),
+      firstName: firstName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(firstName),
+      lastName: lastName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastName),
+      fullName: fullName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fullName),
+      program: program == null && nullToAbsent
+          ? const Value.absent()
+          : Value(program),
+      yearLevel: yearLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(yearLevel),
+      section: section == null && nullToAbsent
+          ? const Value.absent()
+          : Value(section),
+      isComplete: Value(isComplete),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -4540,10 +5003,17 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
       clientUpdatedAt: serializer.fromJson<DateTime?>(json['clientUpdatedAt']),
       deleted: serializer.fromJson<bool>(json['deleted']),
       userId: serializer.fromJson<String>(json['userId']),
-      name: serializer.fromJson<String>(json['name']),
-      program: serializer.fromJson<String>(json['program']),
-      yearLevel: serializer.fromJson<int>(json['yearLevel']),
-      section: serializer.fromJson<int>(json['section']),
+      googleId: serializer.fromJson<String?>(json['googleId']),
+      studentNumber: serializer.fromJson<String?>(json['studentNumber']),
+      firstName: serializer.fromJson<String?>(json['firstName']),
+      lastName: serializer.fromJson<String?>(json['lastName']),
+      fullName: serializer.fromJson<String?>(json['fullName']),
+      program: serializer.fromJson<String?>(json['program']),
+      yearLevel: serializer.fromJson<int?>(json['yearLevel']),
+      section: serializer.fromJson<String?>(json['section']),
+      isComplete: serializer.fromJson<bool>(json['isComplete']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -4555,10 +5025,17 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
       'clientUpdatedAt': serializer.toJson<DateTime?>(clientUpdatedAt),
       'deleted': serializer.toJson<bool>(deleted),
       'userId': serializer.toJson<String>(userId),
-      'name': serializer.toJson<String>(name),
-      'program': serializer.toJson<String>(program),
-      'yearLevel': serializer.toJson<int>(yearLevel),
-      'section': serializer.toJson<int>(section),
+      'googleId': serializer.toJson<String?>(googleId),
+      'studentNumber': serializer.toJson<String?>(studentNumber),
+      'firstName': serializer.toJson<String?>(firstName),
+      'lastName': serializer.toJson<String?>(lastName),
+      'fullName': serializer.toJson<String?>(fullName),
+      'program': serializer.toJson<String?>(program),
+      'yearLevel': serializer.toJson<int?>(yearLevel),
+      'section': serializer.toJson<String?>(section),
+      'isComplete': serializer.toJson<bool>(isComplete),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
@@ -4568,10 +5045,17 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
     Value<DateTime?> clientUpdatedAt = const Value.absent(),
     bool? deleted,
     String? userId,
-    String? name,
-    String? program,
-    int? yearLevel,
-    int? section,
+    Value<String?> googleId = const Value.absent(),
+    Value<String?> studentNumber = const Value.absent(),
+    Value<String?> firstName = const Value.absent(),
+    Value<String?> lastName = const Value.absent(),
+    Value<String?> fullName = const Value.absent(),
+    Value<String?> program = const Value.absent(),
+    Value<int?> yearLevel = const Value.absent(),
+    Value<String?> section = const Value.absent(),
+    bool? isComplete,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) => UserProfile(
     id: id ?? this.id,
     isSynced: isSynced ?? this.isSynced,
@@ -4580,10 +5064,19 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
         : this.clientUpdatedAt,
     deleted: deleted ?? this.deleted,
     userId: userId ?? this.userId,
-    name: name ?? this.name,
-    program: program ?? this.program,
-    yearLevel: yearLevel ?? this.yearLevel,
-    section: section ?? this.section,
+    googleId: googleId.present ? googleId.value : this.googleId,
+    studentNumber: studentNumber.present
+        ? studentNumber.value
+        : this.studentNumber,
+    firstName: firstName.present ? firstName.value : this.firstName,
+    lastName: lastName.present ? lastName.value : this.lastName,
+    fullName: fullName.present ? fullName.value : this.fullName,
+    program: program.present ? program.value : this.program,
+    yearLevel: yearLevel.present ? yearLevel.value : this.yearLevel,
+    section: section.present ? section.value : this.section,
+    isComplete: isComplete ?? this.isComplete,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   UserProfile copyWithCompanion(UserProfilesCompanion data) {
     return UserProfile(
@@ -4594,10 +5087,21 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
           : this.clientUpdatedAt,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       userId: data.userId.present ? data.userId.value : this.userId,
-      name: data.name.present ? data.name.value : this.name,
+      googleId: data.googleId.present ? data.googleId.value : this.googleId,
+      studentNumber: data.studentNumber.present
+          ? data.studentNumber.value
+          : this.studentNumber,
+      firstName: data.firstName.present ? data.firstName.value : this.firstName,
+      lastName: data.lastName.present ? data.lastName.value : this.lastName,
+      fullName: data.fullName.present ? data.fullName.value : this.fullName,
       program: data.program.present ? data.program.value : this.program,
       yearLevel: data.yearLevel.present ? data.yearLevel.value : this.yearLevel,
       section: data.section.present ? data.section.value : this.section,
+      isComplete: data.isComplete.present
+          ? data.isComplete.value
+          : this.isComplete,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -4609,10 +5113,17 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
           ..write('clientUpdatedAt: $clientUpdatedAt, ')
           ..write('deleted: $deleted, ')
           ..write('userId: $userId, ')
-          ..write('name: $name, ')
+          ..write('googleId: $googleId, ')
+          ..write('studentNumber: $studentNumber, ')
+          ..write('firstName: $firstName, ')
+          ..write('lastName: $lastName, ')
+          ..write('fullName: $fullName, ')
           ..write('program: $program, ')
           ..write('yearLevel: $yearLevel, ')
-          ..write('section: $section')
+          ..write('section: $section, ')
+          ..write('isComplete: $isComplete, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -4624,10 +5135,17 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
     clientUpdatedAt,
     deleted,
     userId,
-    name,
+    googleId,
+    studentNumber,
+    firstName,
+    lastName,
+    fullName,
     program,
     yearLevel,
     section,
+    isComplete,
+    createdAt,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -4638,10 +5156,17 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
           other.clientUpdatedAt == this.clientUpdatedAt &&
           other.deleted == this.deleted &&
           other.userId == this.userId &&
-          other.name == this.name &&
+          other.googleId == this.googleId &&
+          other.studentNumber == this.studentNumber &&
+          other.firstName == this.firstName &&
+          other.lastName == this.lastName &&
+          other.fullName == this.fullName &&
           other.program == this.program &&
           other.yearLevel == this.yearLevel &&
-          other.section == this.section);
+          other.section == this.section &&
+          other.isComplete == this.isComplete &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
@@ -4650,10 +5175,17 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
   final Value<DateTime?> clientUpdatedAt;
   final Value<bool> deleted;
   final Value<String> userId;
-  final Value<String> name;
-  final Value<String> program;
-  final Value<int> yearLevel;
-  final Value<int> section;
+  final Value<String?> googleId;
+  final Value<String?> studentNumber;
+  final Value<String?> firstName;
+  final Value<String?> lastName;
+  final Value<String?> fullName;
+  final Value<String?> program;
+  final Value<int?> yearLevel;
+  final Value<String?> section;
+  final Value<bool> isComplete;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const UserProfilesCompanion({
     this.id = const Value.absent(),
@@ -4661,10 +5193,17 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
     this.clientUpdatedAt = const Value.absent(),
     this.deleted = const Value.absent(),
     this.userId = const Value.absent(),
-    this.name = const Value.absent(),
+    this.googleId = const Value.absent(),
+    this.studentNumber = const Value.absent(),
+    this.firstName = const Value.absent(),
+    this.lastName = const Value.absent(),
+    this.fullName = const Value.absent(),
     this.program = const Value.absent(),
     this.yearLevel = const Value.absent(),
     this.section = const Value.absent(),
+    this.isComplete = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserProfilesCompanion.insert({
@@ -4673,27 +5212,37 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
     this.clientUpdatedAt = const Value.absent(),
     this.deleted = const Value.absent(),
     required String userId,
-    required String name,
-    required String program,
-    required int yearLevel,
-    required int section,
+    this.googleId = const Value.absent(),
+    this.studentNumber = const Value.absent(),
+    this.firstName = const Value.absent(),
+    this.lastName = const Value.absent(),
+    this.fullName = const Value.absent(),
+    this.program = const Value.absent(),
+    this.yearLevel = const Value.absent(),
+    this.section = const Value.absent(),
+    this.isComplete = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       userId = Value(userId),
-       name = Value(name),
-       program = Value(program),
-       yearLevel = Value(yearLevel),
-       section = Value(section);
+       userId = Value(userId);
   static Insertable<UserProfile> custom({
     Expression<String>? id,
     Expression<bool>? isSynced,
     Expression<DateTime>? clientUpdatedAt,
     Expression<bool>? deleted,
     Expression<String>? userId,
-    Expression<String>? name,
+    Expression<String>? googleId,
+    Expression<String>? studentNumber,
+    Expression<String>? firstName,
+    Expression<String>? lastName,
+    Expression<String>? fullName,
     Expression<String>? program,
     Expression<int>? yearLevel,
-    Expression<int>? section,
+    Expression<String>? section,
+    Expression<bool>? isComplete,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4702,10 +5251,17 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
       if (clientUpdatedAt != null) 'client_updated_at': clientUpdatedAt,
       if (deleted != null) 'deleted': deleted,
       if (userId != null) 'user_id': userId,
-      if (name != null) 'name': name,
+      if (googleId != null) 'google_id': googleId,
+      if (studentNumber != null) 'student_number': studentNumber,
+      if (firstName != null) 'first_name': firstName,
+      if (lastName != null) 'last_name': lastName,
+      if (fullName != null) 'full_name': fullName,
       if (program != null) 'program': program,
       if (yearLevel != null) 'year_level': yearLevel,
       if (section != null) 'section': section,
+      if (isComplete != null) 'is_complete': isComplete,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4716,10 +5272,17 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
     Value<DateTime?>? clientUpdatedAt,
     Value<bool>? deleted,
     Value<String>? userId,
-    Value<String>? name,
-    Value<String>? program,
-    Value<int>? yearLevel,
-    Value<int>? section,
+    Value<String?>? googleId,
+    Value<String?>? studentNumber,
+    Value<String?>? firstName,
+    Value<String?>? lastName,
+    Value<String?>? fullName,
+    Value<String?>? program,
+    Value<int?>? yearLevel,
+    Value<String?>? section,
+    Value<bool>? isComplete,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return UserProfilesCompanion(
@@ -4728,10 +5291,17 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
       clientUpdatedAt: clientUpdatedAt ?? this.clientUpdatedAt,
       deleted: deleted ?? this.deleted,
       userId: userId ?? this.userId,
-      name: name ?? this.name,
+      googleId: googleId ?? this.googleId,
+      studentNumber: studentNumber ?? this.studentNumber,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      fullName: fullName ?? this.fullName,
       program: program ?? this.program,
       yearLevel: yearLevel ?? this.yearLevel,
       section: section ?? this.section,
+      isComplete: isComplete ?? this.isComplete,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4754,8 +5324,20 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
     if (userId.present) {
       map['user_id'] = Variable<String>(userId.value);
     }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
+    if (googleId.present) {
+      map['google_id'] = Variable<String>(googleId.value);
+    }
+    if (studentNumber.present) {
+      map['student_number'] = Variable<String>(studentNumber.value);
+    }
+    if (firstName.present) {
+      map['first_name'] = Variable<String>(firstName.value);
+    }
+    if (lastName.present) {
+      map['last_name'] = Variable<String>(lastName.value);
+    }
+    if (fullName.present) {
+      map['full_name'] = Variable<String>(fullName.value);
     }
     if (program.present) {
       map['program'] = Variable<String>(program.value);
@@ -4764,7 +5346,16 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
       map['year_level'] = Variable<int>(yearLevel.value);
     }
     if (section.present) {
-      map['section'] = Variable<int>(section.value);
+      map['section'] = Variable<String>(section.value);
+    }
+    if (isComplete.present) {
+      map['is_complete'] = Variable<bool>(isComplete.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -4780,10 +5371,17 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
           ..write('clientUpdatedAt: $clientUpdatedAt, ')
           ..write('deleted: $deleted, ')
           ..write('userId: $userId, ')
-          ..write('name: $name, ')
+          ..write('googleId: $googleId, ')
+          ..write('studentNumber: $studentNumber, ')
+          ..write('firstName: $firstName, ')
+          ..write('lastName: $lastName, ')
+          ..write('fullName: $fullName, ')
           ..write('program: $program, ')
           ..write('yearLevel: $yearLevel, ')
           ..write('section: $section, ')
+          ..write('isComplete: $isComplete, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8660,6 +9258,11 @@ typedef $$AttendanceTableCreateCompanionBuilder =
       Value<bool> deleted,
       required String eventId,
       required String userId,
+      required String studentNumber,
+      required String lastName,
+      required String firstName,
+      required String program,
+      required int yearLevel,
       required DateTime timestamp,
       Value<String> status,
       Value<int> rowid,
@@ -8672,6 +9275,11 @@ typedef $$AttendanceTableUpdateCompanionBuilder =
       Value<bool> deleted,
       Value<String> eventId,
       Value<String> userId,
+      Value<String> studentNumber,
+      Value<String> lastName,
+      Value<String> firstName,
+      Value<String> program,
+      Value<int> yearLevel,
       Value<DateTime> timestamp,
       Value<String> status,
       Value<int> rowid,
@@ -8744,6 +9352,31 @@ class $$AttendanceTableFilterComposer
 
   ColumnFilters<bool> get deleted => $composableBuilder(
     column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentNumber => $composableBuilder(
+    column: $table.studentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastName => $composableBuilder(
+    column: $table.lastName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstName => $composableBuilder(
+    column: $table.firstName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get program => $composableBuilder(
+    column: $table.program,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get yearLevel => $composableBuilder(
+    column: $table.yearLevel,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8833,6 +9466,31 @@ class $$AttendanceTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get studentNumber => $composableBuilder(
+    column: $table.studentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastName => $composableBuilder(
+    column: $table.lastName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstName => $composableBuilder(
+    column: $table.firstName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get program => $composableBuilder(
+    column: $table.program,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get yearLevel => $composableBuilder(
+    column: $table.yearLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get timestamp => $composableBuilder(
     column: $table.timestamp,
     builder: (column) => ColumnOrderings(column),
@@ -8912,6 +9570,23 @@ class $$AttendanceTableAnnotationComposer
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get studentNumber => $composableBuilder(
+    column: $table.studentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastName =>
+      $composableBuilder(column: $table.lastName, builder: (column) => column);
+
+  GeneratedColumn<String> get firstName =>
+      $composableBuilder(column: $table.firstName, builder: (column) => column);
+
+  GeneratedColumn<String> get program =>
+      $composableBuilder(column: $table.program, builder: (column) => column);
+
+  GeneratedColumn<int> get yearLevel =>
+      $composableBuilder(column: $table.yearLevel, builder: (column) => column);
 
   GeneratedColumn<DateTime> get timestamp =>
       $composableBuilder(column: $table.timestamp, builder: (column) => column);
@@ -9000,6 +9675,11 @@ class $$AttendanceTableTableManager
                 Value<bool> deleted = const Value.absent(),
                 Value<String> eventId = const Value.absent(),
                 Value<String> userId = const Value.absent(),
+                Value<String> studentNumber = const Value.absent(),
+                Value<String> lastName = const Value.absent(),
+                Value<String> firstName = const Value.absent(),
+                Value<String> program = const Value.absent(),
+                Value<int> yearLevel = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -9010,6 +9690,11 @@ class $$AttendanceTableTableManager
                 deleted: deleted,
                 eventId: eventId,
                 userId: userId,
+                studentNumber: studentNumber,
+                lastName: lastName,
+                firstName: firstName,
+                program: program,
+                yearLevel: yearLevel,
                 timestamp: timestamp,
                 status: status,
                 rowid: rowid,
@@ -9022,6 +9707,11 @@ class $$AttendanceTableTableManager
                 Value<bool> deleted = const Value.absent(),
                 required String eventId,
                 required String userId,
+                required String studentNumber,
+                required String lastName,
+                required String firstName,
+                required String program,
+                required int yearLevel,
                 required DateTime timestamp,
                 Value<String> status = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -9032,6 +9722,11 @@ class $$AttendanceTableTableManager
                 deleted: deleted,
                 eventId: eventId,
                 userId: userId,
+                studentNumber: studentNumber,
+                lastName: lastName,
+                firstName: firstName,
+                program: program,
+                yearLevel: yearLevel,
                 timestamp: timestamp,
                 status: status,
                 rowid: rowid,
@@ -9123,10 +9818,17 @@ typedef $$UserProfilesTableCreateCompanionBuilder =
       Value<DateTime?> clientUpdatedAt,
       Value<bool> deleted,
       required String userId,
-      required String name,
-      required String program,
-      required int yearLevel,
-      required int section,
+      Value<String?> googleId,
+      Value<String?> studentNumber,
+      Value<String?> firstName,
+      Value<String?> lastName,
+      Value<String?> fullName,
+      Value<String?> program,
+      Value<int?> yearLevel,
+      Value<String?> section,
+      Value<bool> isComplete,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 typedef $$UserProfilesTableUpdateCompanionBuilder =
@@ -9136,10 +9838,17 @@ typedef $$UserProfilesTableUpdateCompanionBuilder =
       Value<DateTime?> clientUpdatedAt,
       Value<bool> deleted,
       Value<String> userId,
-      Value<String> name,
-      Value<String> program,
-      Value<int> yearLevel,
-      Value<int> section,
+      Value<String?> googleId,
+      Value<String?> studentNumber,
+      Value<String?> firstName,
+      Value<String?> lastName,
+      Value<String?> fullName,
+      Value<String?> program,
+      Value<int?> yearLevel,
+      Value<String?> section,
+      Value<bool> isComplete,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 
@@ -9195,8 +9904,28 @@ class $$UserProfilesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnFilters<String> get googleId => $composableBuilder(
+    column: $table.googleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentNumber => $composableBuilder(
+    column: $table.studentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstName => $composableBuilder(
+    column: $table.firstName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastName => $composableBuilder(
+    column: $table.lastName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fullName => $composableBuilder(
+    column: $table.fullName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9210,8 +9939,23 @@ class $$UserProfilesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get section => $composableBuilder(
+  ColumnFilters<String> get section => $composableBuilder(
     column: $table.section,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isComplete => $composableBuilder(
+    column: $table.isComplete,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9268,8 +10012,28 @@ class $$UserProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnOrderings<String> get googleId => $composableBuilder(
+    column: $table.googleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentNumber => $composableBuilder(
+    column: $table.studentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstName => $composableBuilder(
+    column: $table.firstName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastName => $composableBuilder(
+    column: $table.lastName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fullName => $composableBuilder(
+    column: $table.fullName,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9283,8 +10047,23 @@ class $$UserProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get section => $composableBuilder(
+  ColumnOrderings<String> get section => $composableBuilder(
     column: $table.section,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isComplete => $composableBuilder(
+    column: $table.isComplete,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9335,8 +10114,22 @@ class $$UserProfilesTableAnnotationComposer
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get googleId =>
+      $composableBuilder(column: $table.googleId, builder: (column) => column);
+
+  GeneratedColumn<String> get studentNumber => $composableBuilder(
+    column: $table.studentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get firstName =>
+      $composableBuilder(column: $table.firstName, builder: (column) => column);
+
+  GeneratedColumn<String> get lastName =>
+      $composableBuilder(column: $table.lastName, builder: (column) => column);
+
+  GeneratedColumn<String> get fullName =>
+      $composableBuilder(column: $table.fullName, builder: (column) => column);
 
   GeneratedColumn<String> get program =>
       $composableBuilder(column: $table.program, builder: (column) => column);
@@ -9344,8 +10137,19 @@ class $$UserProfilesTableAnnotationComposer
   GeneratedColumn<int> get yearLevel =>
       $composableBuilder(column: $table.yearLevel, builder: (column) => column);
 
-  GeneratedColumn<int> get section =>
+  GeneratedColumn<String> get section =>
       $composableBuilder(column: $table.section, builder: (column) => column);
+
+  GeneratedColumn<bool> get isComplete => $composableBuilder(
+    column: $table.isComplete,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$UsersTableAnnotationComposer get userId {
     final $$UsersTableAnnotationComposer composer = $composerBuilder(
@@ -9404,10 +10208,17 @@ class $$UserProfilesTableTableManager
                 Value<DateTime?> clientUpdatedAt = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 Value<String> userId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> program = const Value.absent(),
-                Value<int> yearLevel = const Value.absent(),
-                Value<int> section = const Value.absent(),
+                Value<String?> googleId = const Value.absent(),
+                Value<String?> studentNumber = const Value.absent(),
+                Value<String?> firstName = const Value.absent(),
+                Value<String?> lastName = const Value.absent(),
+                Value<String?> fullName = const Value.absent(),
+                Value<String?> program = const Value.absent(),
+                Value<int?> yearLevel = const Value.absent(),
+                Value<String?> section = const Value.absent(),
+                Value<bool> isComplete = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserProfilesCompanion(
                 id: id,
@@ -9415,10 +10226,17 @@ class $$UserProfilesTableTableManager
                 clientUpdatedAt: clientUpdatedAt,
                 deleted: deleted,
                 userId: userId,
-                name: name,
+                googleId: googleId,
+                studentNumber: studentNumber,
+                firstName: firstName,
+                lastName: lastName,
+                fullName: fullName,
                 program: program,
                 yearLevel: yearLevel,
                 section: section,
+                isComplete: isComplete,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9428,10 +10246,17 @@ class $$UserProfilesTableTableManager
                 Value<DateTime?> clientUpdatedAt = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 required String userId,
-                required String name,
-                required String program,
-                required int yearLevel,
-                required int section,
+                Value<String?> googleId = const Value.absent(),
+                Value<String?> studentNumber = const Value.absent(),
+                Value<String?> firstName = const Value.absent(),
+                Value<String?> lastName = const Value.absent(),
+                Value<String?> fullName = const Value.absent(),
+                Value<String?> program = const Value.absent(),
+                Value<int?> yearLevel = const Value.absent(),
+                Value<String?> section = const Value.absent(),
+                Value<bool> isComplete = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserProfilesCompanion.insert(
                 id: id,
@@ -9439,10 +10264,17 @@ class $$UserProfilesTableTableManager
                 clientUpdatedAt: clientUpdatedAt,
                 deleted: deleted,
                 userId: userId,
-                name: name,
+                googleId: googleId,
+                studentNumber: studentNumber,
+                firstName: firstName,
+                lastName: lastName,
+                fullName: fullName,
                 program: program,
                 yearLevel: yearLevel,
                 section: section,
+                isComplete: isComplete,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

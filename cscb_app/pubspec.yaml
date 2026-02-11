@@ -28,6 +28,14 @@ dependencies:
   # Google Sign-In
   google_sign_in: ^6.2.1
   
+  # QR Code Scanner
+  mobile_scanner: ^5.0.0
+  
+  # Export functionality
+  pdf: ^3.10.0
+  share_plus: ^7.2.0
+  csv: ^6.0.0
+  
   # App Info
   package_info_plus: ^8.0.0
 
