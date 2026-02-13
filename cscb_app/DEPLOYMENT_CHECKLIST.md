@@ -14,7 +14,16 @@
 - [x] Created `AutoSyncManager` for automatic sync
 - [x] Registered `AutoSyncManager` in dependency injection
 - [x] Started `AutoSyncManager` in main.dart
+- [x] Added `SyncStatusIndicator` widget for visual feedback
+- [x] Integrated sync status indicator in events home page
+- [x] Fixed Android build config for missing keystore
+- [x] Resolved Git merge conflicts
+- [x] **Implemented bi-directional sync (push + pull)**
+- [x] **Added `pullEvents()` method to sync events from Supabase**
+- [x] **Added `pullAttendance()` method to sync attendance from Supabase**
+- [x] **Added `getAllAttendance()` to remote repository**
 - [x] All files compile successfully
+- [x] Changes pushed to GitHub (feat/nav branch)
 
 ## 📋 Your Action Items
 
@@ -29,7 +38,7 @@
 
 ### 2. Build and Test
 
-- [ ] Run: `flutter pub get` (to install connectivity_plus)
+- [ ] Run: `flutter pub get` (already done, but run again if needed)
 - [ ] Run: `flutter pub run build_runner build --delete-conflicting-outputs`
 - [ ] Run: `flutter run`
 - [ ] Create a test event
@@ -37,6 +46,7 @@
 - [ ] Check Supabase Table Editor → attendance
 - [ ] Verify record exists without `user_id` column
 - [ ] Check console for "AutoSync" messages
+- [ ] Look for sync status indicator in top-right of events page (grey/blue/green/red dot)
 
 ### 3. Test Duplicate Prevention
 
@@ -46,15 +56,29 @@
 - [ ] Check Supabase - should only have 1 record
 - [ ] Verify timestamp is from Device A (earlier)
 
-### 4. Test Automatic Sync
+### 4. Test Automatic Sync and Multi-Device Collaboration
 
+**Test Offline Sync:**
 - [ ] Turn off WiFi/mobile data
 - [ ] Scan a QR code (data saved locally)
 - [ ] Check console: "AutoSync: Offline - waiting for connection"
+- [ ] Check sync indicator: should show grey dot (offline)
 - [ ] Turn on WiFi/mobile data
 - [ ] Check console: "AutoSync: Connection restored - triggering sync"
+- [ ] Check sync indicator: should show blue (syncing) then green (synced)
 - [ ] Check Supabase - data should appear automatically
 - [ ] No need to scan another QR code!
+
+**Test Multi-Device Collaboration (if you have 2 devices):**
+- [ ] Device 1: Create a new event
+- [ ] Device 1: Sync (or wait for auto-sync)
+- [ ] Device 2: Sync (or wait for auto-sync)
+- [ ] Device 2: Verify the event appears in the list
+- [ ] Device 2: Scan a student QR code
+- [ ] Device 2: Sync
+- [ ] Device 1: Sync
+- [ ] Device 1: Verify the attendance record appears
+- [ ] Both devices should show the same data!
 
 ### 5. Verify Sync
 
@@ -108,6 +132,13 @@
 ✅ AutoSync: ✅ All data synced successfully
 ```
 
+**Bi-directional sync (new!):**
+```
+✅ Pulled new event: CS Club Meeting
+✅ Pulled new attendance: 2023-00495-TG-0
+✅ Updated local with earlier remote attendance for 2023-00495-TG-0
+```
+
 **Duplicate detected:**
 ```
 ✅ "Updated Supabase with earlier attendance for [student_number]"
@@ -120,6 +151,8 @@
 - `SYNC_FINAL_SUMMARY.md` - Overview of all changes
 - `ATTENDANCE_SYNC_IMPROVEMENTS.md` - Detailed technical explanation
 - `AUTO_SYNC_FEATURE.md` - Automatic sync documentation
+- `SYNC_STATUS_INDICATOR.md` - Visual sync status indicator documentation
+- `BIDIRECTIONAL_SYNC.md` - **NEW! Bi-directional sync explanation**
 - `SUPABASE_SYNC_QUICK_START.md` - Step-by-step setup guide
 - `supabase_sync_migration.sql` - SQL to run in Supabase
 
@@ -163,6 +196,11 @@ You'll know everything is working when:
 8. ✅ Sync happens automatically when connection restored
 9. ✅ No need to scan QR code to trigger sync
 10. ✅ Periodic sync every 5 minutes when online
+11. ✅ Sync status indicator shows current state (grey/blue/green/red)
+12. ✅ Indicator updates in real-time as sync status changes
+13. ✅ **Device 1 creates event → Device 2 sees it after sync**
+14. ✅ **Device 2 records attendance → Device 1 sees it after sync**
+15. ✅ **Multiple devices can collaborate on same event**
 
 ---
 

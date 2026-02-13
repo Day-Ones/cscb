@@ -69,4 +69,17 @@ class RemoteAttendanceRepository {
       throw Exception('Failed to fetch attendance: $e');
     }
   }
+
+  /// Get all attendance records from Supabase
+  Future<List<Map<String, dynamic>>> getAllAttendance() async {
+    try {
+      final response = await _supabase
+          .from('attendance')
+          .select()
+          .eq('deleted', false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw Exception('Failed to fetch all attendance: $e');
+    }
+  }
 }

@@ -23,12 +23,19 @@ class SyncService {
   );
 
   /// Sync all data (users, organizations, events, attendance)
+  /// Now includes bi-directional sync: push local changes AND pull remote changes
   Future<SyncResult> syncAll() async {
     try {
+      // First, push local changes to Supabase
       await syncUsers();
       await syncOrganizations();
       await syncEvents();
       await syncAttendance();
+      
+      // Then, pull remote changes from Supabase
+      await pullEvents();
+      await pullAttendance();
+      
       return SyncResult.success('All data synced successfully');
     } catch (e) {
       return SyncResult.failure('Sync failed: $e');
@@ -245,6 +252,140 @@ class SyncService {
         debugPrint('Failed to sync attendance ${attendance.id}: $e');
         // Continue with next attendance
       }
+    }
+  }
+
+  /// Pull events from Supabase to local database
+  /// This allows devices to see events created by other devices
+  Future<void> pullEvents() async {
+    try {
+      final remoteEvents = await _remoteEventRepo.getAllEvents();
+      
+      for (var eventData in remoteEvents) {
+        // Check if event exists locally
+        final localEvent = await (_db.select(_db.events)
+              ..where((tbl) => tbl.id.equals(eventData['id'])))
+            .getSingleOrNull();
+
+        if (localEvent == null) {
+          // New event from another device - insert it
+          await _db.into(_db.events).insert(
+            EventsCompanion(
+              id: Value(eventData['id']),
+              orgId: Value(eventData['org_id']),
+              name: Value(eventData['name']),
+              description: Value(eventData['description'] ?? ''),
+              eventDate: Value(DateTime.parse(eventData['event_date'])),
+              location: Value(eventData['location'] ?? ''),
+              maxAttendees: Value(eventData['max_attendees']),
+              createdBy: Value(eventData['created_by']),
+              createdAt: Value(eventData['created_at'] != null 
+                  ? DateTime.parse(eventData['created_at']) 
+                  : DateTime.now()),
+              isSynced: const Value(true),
+              deleted: Value(eventData['deleted'] ?? false),
+              clientUpdatedAt: Value(eventData['client_updated_at'] != null
+                  ? DateTime.parse(eventData['client_updated_at'])
+                  : null),
+            ),
+          );
+          debugPrint('Pulled new event: ${eventData['name']}');
+        } else {
+          // Event exists - check if remote is newer
+          final remoteUpdatedAt = eventData['client_updated_at'] != null
+              ? DateTime.parse(eventData['client_updated_at'])
+              : DateTime.parse(eventData['created_at']);
+          final localUpdatedAt = localEvent.clientUpdatedAt ?? localEvent.createdAt ?? DateTime.now();
+
+          if (remoteUpdatedAt.isAfter(localUpdatedAt)) {
+            // Remote is newer - update local
+            await (_db.update(_db.events)..where((tbl) => tbl.id.equals(eventData['id'])))
+                .write(EventsCompanion(
+              name: Value(eventData['name']),
+              description: Value(eventData['description'] ?? ''),
+              eventDate: Value(DateTime.parse(eventData['event_date'])),
+              location: Value(eventData['location'] ?? ''),
+              maxAttendees: Value(eventData['max_attendees']),
+              isSynced: const Value(true),
+              deleted: Value(eventData['deleted'] ?? false),
+              clientUpdatedAt: Value(remoteUpdatedAt),
+            ));
+            debugPrint('Updated local event: ${eventData['name']}');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to pull events: $e');
+      throw Exception('Failed to pull events from Supabase: $e');
+    }
+  }
+
+  /// Pull attendance from Supabase to local database
+  /// This allows devices to see attendance recorded by other devices
+  Future<void> pullAttendance() async {
+    try {
+      final remoteAttendance = await _remoteAttendanceRepo.getAllAttendance();
+      
+      for (var attendanceData in remoteAttendance) {
+        // Check if attendance exists locally
+        final localAttendance = await (_db.select(_db.attendance)
+              ..where((tbl) => tbl.id.equals(attendanceData['id'])))
+            .getSingleOrNull();
+
+        if (localAttendance == null) {
+          // Check for duplicate by event_id + student_number
+          final duplicateCheck = await (_db.select(_db.attendance)
+                ..where((tbl) => 
+                    tbl.eventId.equals(attendanceData['event_id']) & 
+                    tbl.studentNumber.equals(attendanceData['student_number']) &
+                    tbl.deleted.equals(false)))
+              .getSingleOrNull();
+
+          if (duplicateCheck == null) {
+            // New attendance from another device - insert it
+            await _db.into(_db.attendance).insert(
+              AttendanceCompanion(
+                id: Value(attendanceData['id']),
+                eventId: Value(attendanceData['event_id']),
+                studentNumber: Value(attendanceData['student_number']),
+                lastName: Value(attendanceData['last_name']),
+                firstName: Value(attendanceData['first_name']),
+                program: Value(attendanceData['program']),
+                yearLevel: Value(attendanceData['year_level']),
+                timestamp: Value(DateTime.parse(attendanceData['timestamp'])),
+                status: Value(attendanceData['status']),
+                isSynced: const Value(true),
+                deleted: Value(attendanceData['deleted'] ?? false),
+                clientUpdatedAt: Value(attendanceData['client_updated_at'] != null
+                    ? DateTime.parse(attendanceData['client_updated_at'])
+                    : null),
+              ),
+            );
+            debugPrint('Pulled new attendance: ${attendanceData['student_number']}');
+          } else {
+            // Duplicate exists locally - keep the earlier one
+            final remoteTimestamp = DateTime.parse(attendanceData['timestamp']);
+            final localTimestamp = duplicateCheck.timestamp;
+
+            if (remoteTimestamp.isBefore(localTimestamp)) {
+              // Remote is earlier - update local with earlier timestamp
+              await (_db.update(_db.attendance)
+                    ..where((tbl) => tbl.id.equals(duplicateCheck.id)))
+                  .write(AttendanceCompanion(
+                timestamp: Value(remoteTimestamp),
+                isSynced: const Value(true),
+                clientUpdatedAt: Value(attendanceData['client_updated_at'] != null
+                    ? DateTime.parse(attendanceData['client_updated_at'])
+                    : null),
+              ));
+              debugPrint('Updated local with earlier remote attendance for ${attendanceData['student_number']}');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to pull attendance: $e');
+      throw Exception('Failed to pull attendance from Supabase: $e');
     }
   }
 }
