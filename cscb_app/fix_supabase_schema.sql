@@ -9,53 +9,38 @@ DROP INDEX IF EXISTS idx_attendance_user_id;
 ALTER TABLE events ALTER COLUMN created_by DROP NOT NULL;
 ALTER TABLE events DROP CONSTRAINT IF EXISTS events_created_by_fkey;
 
--- 3. Verify events table structure
+-- 3. Check what data exists
+SELECT 'Organizations:' as table_name, COUNT(*) as count FROM organizations
+UNION ALL
+SELECT 'Events:', COUNT(*) FROM events
+UNION ALL
+SELECT 'Attendance:', COUNT(*) FROM attendance;
+
+-- 4. Check if there are orphaned attendance records (attendance without events)
+SELECT 
+    'Orphaned Attendance Records:' as issue,
+    COUNT(*) as count
+FROM attendance a
+LEFT JOIN events e ON a.event_id = e.id
+WHERE e.id IS NULL;
+
+-- 5. Get the event_id from attendance to see what org_id it should have
+SELECT DISTINCT event_id FROM attendance LIMIT 5;
+
+-- 6. Verify events table structure
 SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_name = 'events'
 ORDER BY ordinal_position;
 
--- 4. Verify attendance table structure  
+-- 7. Verify attendance table structure  
 SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_name = 'attendance'
 ORDER BY ordinal_position;
 
--- 5. Check if there are any failed inserts in logs
--- (This is just informational - check your Supabase logs for errors)
-
--- 6. Test inserting a sample event
-INSERT INTO events (
-    id,
-    org_id,
-    name,
-    description,
-    event_date,
-    location,
-    max_attendees,
-    created_by,
-    is_synced,
-    deleted
-) VALUES (
-    'test-event-' || gen_random_uuid()::text,
-    'test-org-id',
-    'Test Event',
-    'This is a test event',
-    NOW() + INTERVAL '1 day',
-    'Test Location',
-    100,
-    'test-user-id',
-    false,
-    false
-);
-
--- 7. Verify the test event was inserted
-SELECT * FROM events WHERE name = 'Test Event';
-
--- 8. Clean up test event
-DELETE FROM events WHERE name = 'Test Event';
-
--- 9. Show current RLS policies for events
-SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
+-- 8. Check RLS policies for all tables
+SELECT tablename, policyname, cmd
 FROM pg_policies
-WHERE tablename = 'events';
+WHERE tablename IN ('organizations', 'events', 'attendance')
+ORDER BY tablename, cmd;
