@@ -65,7 +65,6 @@ class EventRepository {
             AttendanceCompanion.insert(
               id: attendanceId,
               eventId: eventId,
-              userId: studentData.studentNumber, // Use student number as userId
               studentNumber: studentData.studentNumber,
               lastName: studentData.lastName,
               firstName: studentData.firstName,

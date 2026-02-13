@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../core/di/locator.dart';
 import '../data/local/repositories/event_repository.dart';
 import '../data/local/db/app_database.dart';
+import '../data/sync/sync_service.dart';
+import '../widgets/sync_status_indicator.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'event_attendance_page.dart';
 import 'qr_generator_page.dart';
@@ -16,6 +19,7 @@ class EventsHomePage extends StatefulWidget {
 
 class _EventsHomePageState extends State<EventsHomePage> with SingleTickerProviderStateMixin {
   final _eventRepo = getIt<EventRepository>();
+  final _syncService = getIt<SyncService>();
   List<Event> _events = [];
   bool _isLoading = true;
   late AnimationController _fabAnimationController;
@@ -183,6 +187,12 @@ class _EventsHomePageState extends State<EventsHomePage> with SingleTickerProvid
       );
 
       await _eventRepo.createEventSimple(event);
+      
+      // Sync to Supabase in the background
+      _syncService.syncEvents().catchError((e) {
+        debugPrint('Failed to sync event to Supabase: $e');
+      });
+      
       await _loadEvents();
 
       if (mounted) {
@@ -256,6 +266,9 @@ class _EventsHomePageState extends State<EventsHomePage> with SingleTickerProvid
                         ],
                       ),
                     ),
+                    // Sync Status Indicator
+                    const SyncStatusIndicator(compact: true),
+                    const SizedBox(width: 12),
                     IconButton(
                       onPressed: () {
                         Navigator.push(

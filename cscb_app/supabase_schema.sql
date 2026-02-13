@@ -125,14 +125,19 @@ END $$;
 CREATE TABLE IF NOT EXISTS attendance (
     id TEXT PRIMARY KEY,
     event_id TEXT REFERENCES events(id) ON DELETE CASCADE,
-    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+    student_number TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    program TEXT NOT NULL,
+    year_level INTEGER NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
     status TEXT DEFAULT 'present' CHECK (status IN ('present', 'absent', 'late')),
     is_synced BOOLEAN DEFAULT FALSE,
     client_updated_at TIMESTAMP WITH TIME ZONE,
     deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(event_id, student_number)
 );
 
 -- User Profiles Table

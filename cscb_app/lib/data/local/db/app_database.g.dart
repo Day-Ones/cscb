@@ -3768,18 +3768,6 @@ class $AttendanceTable extends Attendance
       'REFERENCES events (id)',
     ),
   );
-  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
-  @override
-  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
-    'user_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES users (id)',
-    ),
-  );
   static const VerificationMeta _studentNumberMeta = const VerificationMeta(
     'studentNumber',
   );
@@ -3863,7 +3851,6 @@ class $AttendanceTable extends Attendance
     clientUpdatedAt,
     deleted,
     eventId,
-    userId,
     studentNumber,
     lastName,
     firstName,
@@ -3917,14 +3904,6 @@ class $AttendanceTable extends Attendance
       );
     } else if (isInserting) {
       context.missing(_eventIdMeta);
-    }
-    if (data.containsKey('user_id')) {
-      context.handle(
-        _userIdMeta,
-        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_userIdMeta);
     }
     if (data.containsKey('student_number')) {
       context.handle(
@@ -4012,10 +3991,6 @@ class $AttendanceTable extends Attendance
         DriftSqlType.string,
         data['${effectivePrefix}event_id'],
       )!,
-      userId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}user_id'],
-      )!,
       studentNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}student_number'],
@@ -4059,7 +4034,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
   final DateTime? clientUpdatedAt;
   final bool deleted;
   final String eventId;
-  final String userId;
   final String studentNumber;
   final String lastName;
   final String firstName;
@@ -4073,7 +4047,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     this.clientUpdatedAt,
     required this.deleted,
     required this.eventId,
-    required this.userId,
     required this.studentNumber,
     required this.lastName,
     required this.firstName,
@@ -4092,7 +4065,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     }
     map['deleted'] = Variable<bool>(deleted);
     map['event_id'] = Variable<String>(eventId);
-    map['user_id'] = Variable<String>(userId);
     map['student_number'] = Variable<String>(studentNumber);
     map['last_name'] = Variable<String>(lastName);
     map['first_name'] = Variable<String>(firstName);
@@ -4112,7 +4084,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
           : Value(clientUpdatedAt),
       deleted: Value(deleted),
       eventId: Value(eventId),
-      userId: Value(userId),
       studentNumber: Value(studentNumber),
       lastName: Value(lastName),
       firstName: Value(firstName),
@@ -4134,7 +4105,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
       clientUpdatedAt: serializer.fromJson<DateTime?>(json['clientUpdatedAt']),
       deleted: serializer.fromJson<bool>(json['deleted']),
       eventId: serializer.fromJson<String>(json['eventId']),
-      userId: serializer.fromJson<String>(json['userId']),
       studentNumber: serializer.fromJson<String>(json['studentNumber']),
       lastName: serializer.fromJson<String>(json['lastName']),
       firstName: serializer.fromJson<String>(json['firstName']),
@@ -4153,7 +4123,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
       'clientUpdatedAt': serializer.toJson<DateTime?>(clientUpdatedAt),
       'deleted': serializer.toJson<bool>(deleted),
       'eventId': serializer.toJson<String>(eventId),
-      'userId': serializer.toJson<String>(userId),
       'studentNumber': serializer.toJson<String>(studentNumber),
       'lastName': serializer.toJson<String>(lastName),
       'firstName': serializer.toJson<String>(firstName),
@@ -4170,7 +4139,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     Value<DateTime?> clientUpdatedAt = const Value.absent(),
     bool? deleted,
     String? eventId,
-    String? userId,
     String? studentNumber,
     String? lastName,
     String? firstName,
@@ -4186,7 +4154,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
         : this.clientUpdatedAt,
     deleted: deleted ?? this.deleted,
     eventId: eventId ?? this.eventId,
-    userId: userId ?? this.userId,
     studentNumber: studentNumber ?? this.studentNumber,
     lastName: lastName ?? this.lastName,
     firstName: firstName ?? this.firstName,
@@ -4204,7 +4171,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
           : this.clientUpdatedAt,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       eventId: data.eventId.present ? data.eventId.value : this.eventId,
-      userId: data.userId.present ? data.userId.value : this.userId,
       studentNumber: data.studentNumber.present
           ? data.studentNumber.value
           : this.studentNumber,
@@ -4225,7 +4191,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
           ..write('clientUpdatedAt: $clientUpdatedAt, ')
           ..write('deleted: $deleted, ')
           ..write('eventId: $eventId, ')
-          ..write('userId: $userId, ')
           ..write('studentNumber: $studentNumber, ')
           ..write('lastName: $lastName, ')
           ..write('firstName: $firstName, ')
@@ -4244,7 +4209,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
     clientUpdatedAt,
     deleted,
     eventId,
-    userId,
     studentNumber,
     lastName,
     firstName,
@@ -4262,7 +4226,6 @@ class AttendanceData extends DataClass implements Insertable<AttendanceData> {
           other.clientUpdatedAt == this.clientUpdatedAt &&
           other.deleted == this.deleted &&
           other.eventId == this.eventId &&
-          other.userId == this.userId &&
           other.studentNumber == this.studentNumber &&
           other.lastName == this.lastName &&
           other.firstName == this.firstName &&
@@ -4278,7 +4241,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
   final Value<DateTime?> clientUpdatedAt;
   final Value<bool> deleted;
   final Value<String> eventId;
-  final Value<String> userId;
   final Value<String> studentNumber;
   final Value<String> lastName;
   final Value<String> firstName;
@@ -4293,7 +4255,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     this.clientUpdatedAt = const Value.absent(),
     this.deleted = const Value.absent(),
     this.eventId = const Value.absent(),
-    this.userId = const Value.absent(),
     this.studentNumber = const Value.absent(),
     this.lastName = const Value.absent(),
     this.firstName = const Value.absent(),
@@ -4309,7 +4270,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     this.clientUpdatedAt = const Value.absent(),
     this.deleted = const Value.absent(),
     required String eventId,
-    required String userId,
     required String studentNumber,
     required String lastName,
     required String firstName,
@@ -4320,7 +4280,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        eventId = Value(eventId),
-       userId = Value(userId),
        studentNumber = Value(studentNumber),
        lastName = Value(lastName),
        firstName = Value(firstName),
@@ -4333,7 +4292,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     Expression<DateTime>? clientUpdatedAt,
     Expression<bool>? deleted,
     Expression<String>? eventId,
-    Expression<String>? userId,
     Expression<String>? studentNumber,
     Expression<String>? lastName,
     Expression<String>? firstName,
@@ -4349,7 +4307,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
       if (clientUpdatedAt != null) 'client_updated_at': clientUpdatedAt,
       if (deleted != null) 'deleted': deleted,
       if (eventId != null) 'event_id': eventId,
-      if (userId != null) 'user_id': userId,
       if (studentNumber != null) 'student_number': studentNumber,
       if (lastName != null) 'last_name': lastName,
       if (firstName != null) 'first_name': firstName,
@@ -4367,7 +4324,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     Value<DateTime?>? clientUpdatedAt,
     Value<bool>? deleted,
     Value<String>? eventId,
-    Value<String>? userId,
     Value<String>? studentNumber,
     Value<String>? lastName,
     Value<String>? firstName,
@@ -4383,7 +4339,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
       clientUpdatedAt: clientUpdatedAt ?? this.clientUpdatedAt,
       deleted: deleted ?? this.deleted,
       eventId: eventId ?? this.eventId,
-      userId: userId ?? this.userId,
       studentNumber: studentNumber ?? this.studentNumber,
       lastName: lastName ?? this.lastName,
       firstName: firstName ?? this.firstName,
@@ -4412,9 +4367,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
     }
     if (eventId.present) {
       map['event_id'] = Variable<String>(eventId.value);
-    }
-    if (userId.present) {
-      map['user_id'] = Variable<String>(userId.value);
     }
     if (studentNumber.present) {
       map['student_number'] = Variable<String>(studentNumber.value);
@@ -4451,7 +4403,6 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceData> {
           ..write('clientUpdatedAt: $clientUpdatedAt, ')
           ..write('deleted: $deleted, ')
           ..write('eventId: $eventId, ')
-          ..write('userId: $userId, ')
           ..write('studentNumber: $studentNumber, ')
           ..write('lastName: $lastName, ')
           ..write('firstName: $firstName, ')
@@ -5485,24 +5436,6 @@ final class $$UsersTableReferences
     );
   }
 
-  static MultiTypedResultKey<$AttendanceTable, List<AttendanceData>>
-  _attendanceRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.attendance,
-    aliasName: $_aliasNameGenerator(db.users.id, db.attendance.userId),
-  );
-
-  $$AttendanceTableProcessedTableManager get attendanceRefs {
-    final manager = $$AttendanceTableTableManager(
-      $_db,
-      $_db.attendance,
-    ).filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_attendanceRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
   static MultiTypedResultKey<$UserProfilesTable, List<UserProfile>>
   _userProfilesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.userProfiles,
@@ -5611,31 +5544,6 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
           }) => $$EventsTableFilterComposer(
             $db: $db,
             $table: $db.events,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> attendanceRefs(
-    Expression<bool> Function($$AttendanceTableFilterComposer f) f,
-  ) {
-    final $$AttendanceTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.attendance,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AttendanceTableFilterComposer(
-            $db: $db,
-            $table: $db.attendance,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5808,31 +5716,6 @@ class $$UsersTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> attendanceRefs<T extends Object>(
-    Expression<T> Function($$AttendanceTableAnnotationComposer a) f,
-  ) {
-    final $$AttendanceTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.attendance,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AttendanceTableAnnotationComposer(
-            $db: $db,
-            $table: $db.attendance,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<T> userProfilesRefs<T extends Object>(
     Expression<T> Function($$UserProfilesTableAnnotationComposer a) f,
   ) {
@@ -5875,7 +5758,6 @@ class $$UsersTableTableManager
           PrefetchHooks Function({
             bool membershipsRefs,
             bool eventsRefs,
-            bool attendanceRefs,
             bool userProfilesRefs,
           })
         > {
@@ -5944,7 +5826,6 @@ class $$UsersTableTableManager
               ({
                 membershipsRefs = false,
                 eventsRefs = false,
-                attendanceRefs = false,
                 userProfilesRefs = false,
               }) {
                 return PrefetchHooks(
@@ -5952,7 +5833,6 @@ class $$UsersTableTableManager
                   explicitlyWatchedTables: [
                     if (membershipsRefs) db.memberships,
                     if (eventsRefs) db.events,
-                    if (attendanceRefs) db.attendance,
                     if (userProfilesRefs) db.userProfiles,
                   ],
                   addJoins: null,
@@ -5989,27 +5869,6 @@ class $$UsersTableTableManager
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.createdBy == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                      if (attendanceRefs)
-                        await $_getPrefetchedData<
-                          User,
-                          $UsersTable,
-                          AttendanceData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$UsersTableReferences
-                              ._attendanceRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$UsersTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).attendanceRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.userId == item.id,
                               ),
                           typedResults: items,
                         ),
@@ -6057,7 +5916,6 @@ typedef $$UsersTableProcessedTableManager =
       PrefetchHooks Function({
         bool membershipsRefs,
         bool eventsRefs,
-        bool attendanceRefs,
         bool userProfilesRefs,
       })
     >;
@@ -9257,7 +9115,6 @@ typedef $$AttendanceTableCreateCompanionBuilder =
       Value<DateTime?> clientUpdatedAt,
       Value<bool> deleted,
       required String eventId,
-      required String userId,
       required String studentNumber,
       required String lastName,
       required String firstName,
@@ -9274,7 +9131,6 @@ typedef $$AttendanceTableUpdateCompanionBuilder =
       Value<DateTime?> clientUpdatedAt,
       Value<bool> deleted,
       Value<String> eventId,
-      Value<String> userId,
       Value<String> studentNumber,
       Value<String> lastName,
       Value<String> firstName,
@@ -9301,24 +9157,6 @@ final class $$AttendanceTableReferences
       $_db.events,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_eventIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static $UsersTable _userIdTable(_$AppDatabase db) => db.users.createAlias(
-    $_aliasNameGenerator(db.attendance.userId, db.users.id),
-  );
-
-  $$UsersTableProcessedTableManager get userId {
-    final $_column = $_itemColumn<String>('user_id')!;
-
-    final manager = $$UsersTableTableManager(
-      $_db,
-      $_db.users,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -9404,29 +9242,6 @@ class $$AttendanceTableFilterComposer
           }) => $$EventsTableFilterComposer(
             $db: $db,
             $table: $db.events,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$UsersTableFilterComposer get userId {
-    final $$UsersTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.users,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$UsersTableFilterComposer(
-            $db: $db,
-            $table: $db.users,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -9523,29 +9338,6 @@ class $$AttendanceTableOrderingComposer
     );
     return composer;
   }
-
-  $$UsersTableOrderingComposer get userId {
-    final $$UsersTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.users,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$UsersTableOrderingComposer(
-            $db: $db,
-            $table: $db.users,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AttendanceTableAnnotationComposer
@@ -9616,29 +9408,6 @@ class $$AttendanceTableAnnotationComposer
     );
     return composer;
   }
-
-  $$UsersTableAnnotationComposer get userId {
-    final $$UsersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.users,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$UsersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.users,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AttendanceTableTableManager
@@ -9654,7 +9423,7 @@ class $$AttendanceTableTableManager
           $$AttendanceTableUpdateCompanionBuilder,
           (AttendanceData, $$AttendanceTableReferences),
           AttendanceData,
-          PrefetchHooks Function({bool eventId, bool userId})
+          PrefetchHooks Function({bool eventId})
         > {
   $$AttendanceTableTableManager(_$AppDatabase db, $AttendanceTable table)
     : super(
@@ -9674,7 +9443,6 @@ class $$AttendanceTableTableManager
                 Value<DateTime?> clientUpdatedAt = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 Value<String> eventId = const Value.absent(),
-                Value<String> userId = const Value.absent(),
                 Value<String> studentNumber = const Value.absent(),
                 Value<String> lastName = const Value.absent(),
                 Value<String> firstName = const Value.absent(),
@@ -9689,7 +9457,6 @@ class $$AttendanceTableTableManager
                 clientUpdatedAt: clientUpdatedAt,
                 deleted: deleted,
                 eventId: eventId,
-                userId: userId,
                 studentNumber: studentNumber,
                 lastName: lastName,
                 firstName: firstName,
@@ -9706,7 +9473,6 @@ class $$AttendanceTableTableManager
                 Value<DateTime?> clientUpdatedAt = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 required String eventId,
-                required String userId,
                 required String studentNumber,
                 required String lastName,
                 required String firstName,
@@ -9721,7 +9487,6 @@ class $$AttendanceTableTableManager
                 clientUpdatedAt: clientUpdatedAt,
                 deleted: deleted,
                 eventId: eventId,
-                userId: userId,
                 studentNumber: studentNumber,
                 lastName: lastName,
                 firstName: firstName,
@@ -9739,7 +9504,7 @@ class $$AttendanceTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({eventId = false, userId = false}) {
+          prefetchHooksCallback: ({eventId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -9772,19 +9537,6 @@ class $$AttendanceTableTableManager
                               )
                               as T;
                     }
-                    if (userId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.userId,
-                                referencedTable: $$AttendanceTableReferences
-                                    ._userIdTable(db),
-                                referencedColumn: $$AttendanceTableReferences
-                                    ._userIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
 
                     return state;
                   },
@@ -9809,7 +9561,7 @@ typedef $$AttendanceTableProcessedTableManager =
       $$AttendanceTableUpdateCompanionBuilder,
       (AttendanceData, $$AttendanceTableReferences),
       AttendanceData,
-      PrefetchHooks Function({bool eventId, bool userId})
+      PrefetchHooks Function({bool eventId})
     >;
 typedef $$UserProfilesTableCreateCompanionBuilder =
     UserProfilesCompanion Function({

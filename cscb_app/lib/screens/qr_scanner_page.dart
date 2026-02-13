@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../data/local/db/app_database.dart';
 import '../core/di/locator.dart';
 import '../data/local/repositories/event_repository.dart';
+import '../data/sync/sync_service.dart';
 import '../core/models/student_attendance.dart';
 
 class QRScannerPage extends StatefulWidget {
@@ -16,6 +18,7 @@ class QRScannerPage extends StatefulWidget {
 
 class _QRScannerPageState extends State<QRScannerPage> {
   final _eventRepo = getIt<EventRepository>();
+  final _syncService = getIt<SyncService>();
   final MobileScannerController _controller = MobileScannerController();
   bool _isProcessing = false;
 
@@ -45,6 +48,11 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
       if (mounted) {
         if (result.success && result.data != null) {
+          // Sync to Supabase in the background
+          _syncService.syncAttendance().catchError((e) {
+            debugPrint('Failed to sync attendance to Supabase: $e');
+          });
+          
           // Show success feedback with student info
           _showSuccessDialog(result.data!);
         } else {

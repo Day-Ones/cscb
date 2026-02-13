@@ -3,24 +3,32 @@ import 'package:flutter/foundation.dart';
 import '../local/db/app_database.dart';
 import '../remote/repositories/remote_user_repository.dart';
 import '../remote/repositories/remote_org_repository.dart';
+import '../remote/repositories/remote_event_repository.dart';
+import '../remote/repositories/remote_attendance_repository.dart';
 
 /// Service to handle syncing between local SQLite and Supabase
 class SyncService {
   final AppDatabase _db;
   final RemoteUserRepository _remoteUserRepo;
   final RemoteOrgRepository _remoteOrgRepo;
+  final RemoteEventRepository _remoteEventRepo;
+  final RemoteAttendanceRepository _remoteAttendanceRepo;
 
   SyncService(
     this._db,
     this._remoteUserRepo,
     this._remoteOrgRepo,
+    this._remoteEventRepo,
+    this._remoteAttendanceRepo,
   );
 
-  /// Sync all data (users, organizations, etc.)
+  /// Sync all data (users, organizations, events, attendance)
   Future<SyncResult> syncAll() async {
     try {
       await syncUsers();
       await syncOrganizations();
+      await syncEvents();
+      await syncAttendance();
       return SyncResult.success('All data synced successfully');
     } catch (e) {
       return SyncResult.failure('Sync failed: $e');
@@ -139,6 +147,104 @@ class SyncService {
       }
     } catch (e) {
       throw Exception('Failed to pull data from Supabase: $e');
+    }
+  }
+
+  /// Sync events from local to Supabase
+  Future<void> syncEvents() async {
+    // Get all unsynced events from local database
+    final unsyncedEvents = await (_db.select(_db.events)
+          ..where((tbl) => tbl.isSynced.equals(false) & tbl.deleted.equals(false)))
+        .get();
+
+    for (var event in unsyncedEvents) {
+      try {
+        // Create or update event in Supabase
+        await _remoteEventRepo.createEvent({
+          'id': event.id,
+          'org_id': event.orgId,
+          'name': event.name,
+          'description': event.description,
+          'event_date': event.eventDate.toIso8601String(),
+          'location': event.location,
+          'max_attendees': event.maxAttendees,
+          'created_by': event.createdBy,
+          'created_at': event.createdAt?.toIso8601String(),
+          'client_updated_at': event.clientUpdatedAt?.toIso8601String(),
+          'deleted': event.deleted,
+        });
+
+        // Mark as synced in local database
+        await (_db.update(_db.events)..where((tbl) => tbl.id.equals(event.id)))
+            .write(EventsCompanion(
+          isSynced: const Value(true),
+          clientUpdatedAt: Value(DateTime.now()),
+        ));
+      } catch (e) {
+        debugPrint('Failed to sync event ${event.name}: $e');
+        // Continue with next event
+      }
+    }
+  }
+
+  /// Sync attendance from local to Supabase
+  Future<void> syncAttendance() async {
+    // Get all unsynced attendance from local database
+    final unsyncedAttendance = await (_db.select(_db.attendance)
+          ..where((tbl) => tbl.isSynced.equals(false) & tbl.deleted.equals(false)))
+        .get();
+
+    for (var attendance in unsyncedAttendance) {
+      try {
+        // Check if attendance already exists in Supabase for this student and event
+        final existingAttendance = await _remoteAttendanceRepo.getAttendanceByEventAndStudent(
+          attendance.eventId,
+          attendance.studentNumber,
+        );
+
+        if (existingAttendance != null) {
+          // Duplicate found - keep the earlier one
+          final existingTimestamp = DateTime.parse(existingAttendance['timestamp']);
+          final localTimestamp = attendance.timestamp;
+
+          if (localTimestamp.isBefore(existingTimestamp)) {
+            // Local record is earlier - update Supabase with earlier timestamp
+            await _remoteAttendanceRepo.updateAttendance(existingAttendance['id'], {
+              'timestamp': localTimestamp.toIso8601String(),
+              'client_updated_at': attendance.clientUpdatedAt?.toIso8601String(),
+            });
+            debugPrint('Updated Supabase with earlier attendance for ${attendance.studentNumber}');
+          } else {
+            // Remote record is earlier - just mark local as synced
+            debugPrint('Kept earlier Supabase attendance for ${attendance.studentNumber}');
+          }
+        } else {
+          // No duplicate - create new attendance in Supabase
+          await _remoteAttendanceRepo.createAttendance({
+            'id': attendance.id,
+            'event_id': attendance.eventId,
+            'student_number': attendance.studentNumber,
+            'last_name': attendance.lastName,
+            'first_name': attendance.firstName,
+            'program': attendance.program,
+            'year_level': attendance.yearLevel,
+            'timestamp': attendance.timestamp.toIso8601String(),
+            'status': attendance.status,
+            'client_updated_at': attendance.clientUpdatedAt?.toIso8601String(),
+            'deleted': attendance.deleted,
+          });
+        }
+
+        // Mark as synced in local database
+        await (_db.update(_db.attendance)..where((tbl) => tbl.id.equals(attendance.id)))
+            .write(AttendanceCompanion(
+          isSynced: const Value(true),
+          clientUpdatedAt: Value(DateTime.now()),
+        ));
+      } catch (e) {
+        debugPrint('Failed to sync attendance ${attendance.id}: $e');
+        // Continue with next attendance
+      }
     }
   }
 }

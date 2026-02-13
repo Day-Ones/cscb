@@ -81,7 +81,6 @@ class Events extends Table with SyncableTable {
 
 class Attendance extends Table with SyncableTable {
   TextColumn get eventId => text().references(Events, #id)();
-  TextColumn get userId => text().references(Users, #id)();
   TextColumn get studentNumber => text()();
   TextColumn get lastName => text()();
   TextColumn get firstName => text()();
@@ -129,7 +128,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -171,6 +170,11 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 6) {
           // Migration from version 5 to 6: Enhanced Attendance with student details
+          await m.deleteTable('attendance');
+          await m.createTable(attendance);
+        }
+        if (from < 7) {
+          // Migration from version 6 to 7: Remove userId from Attendance
           await m.deleteTable('attendance');
           await m.createTable(attendance);
         }

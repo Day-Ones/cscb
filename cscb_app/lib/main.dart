@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/di/locator.dart';
 import 'data/remote/supabase_service.dart';
+import 'data/sync/auto_sync_manager.dart';
 import 'screens/events_home_page.dart';
 
 void main() async {
@@ -11,6 +12,10 @@ void main() async {
 
   // Initialize Database and Repo
   await setupLocator();
+
+  // Start automatic sync manager
+  final autoSyncManager = getIt<AutoSyncManager>();
+  await autoSyncManager.start();
 
   runApp(const MyApp());
 }
