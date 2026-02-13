@@ -5,12 +5,14 @@ import 'package:cscb_app/core/session/user_session.dart';
 import 'package:cscb_app/core/models/result.dart';
 import 'package:cscb_app/core/models/event_model.dart';
 import 'package:cscb_app/core/models/student_attendance.dart';
+import 'package:cscb_app/data/sync/auto_sync_manager.dart';
 
 class EventRepository {
   final AppDatabase db;
   final UserSession _userSession;
+  final AutoSyncManager? _autoSyncManager;
 
-  EventRepository(this.db, this._userSession);
+  EventRepository(this.db, this._userSession, [this._autoSyncManager]);
 
   /// Get all events (for simplified app without org filtering)
   Future<List<Event>> getAllEvents() async {
@@ -74,6 +76,9 @@ class EventRepository {
               status: const Value('present'),
             ),
           );
+
+      // Trigger sync immediately so other devices can see the attendance
+      _autoSyncManager?.manualSync();
 
       return Result.success(studentData);
     } catch (e) {
@@ -142,7 +147,8 @@ class EventRepository {
             ),
           );
 
-      // TODO: Sync to Supabase when RemoteEventRepository is implemented
+      // Trigger sync immediately so other devices can see the event
+      _autoSyncManager?.manualSync();
 
       return Result.success(eventId);
     } catch (e) {

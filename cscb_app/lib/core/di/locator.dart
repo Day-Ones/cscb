@@ -51,9 +51,12 @@ Future<void> setupLocator() async {
   );
   getIt.registerSingleton<UserRepository>(UserRepository(db));
   getIt.registerSingleton<UserProfileRepository>(UserProfileRepository(db));
+  
+  // Register EventRepository without AutoSyncManager first (to avoid circular dependency)
   getIt.registerSingleton<EventRepository>(
     EventRepository(db, getIt<UserSession>()),
   );
+  
   getIt.registerSingleton<OfficerTitleRepository>(
     OfficerTitleRepository(db),
   );
@@ -89,6 +92,13 @@ Future<void> setupLocator() async {
   // Register AutoSyncManager
   getIt.registerSingleton<AutoSyncManager>(
     AutoSyncManager(getIt<SyncService>()),
+  );
+
+  // Now update EventRepository with AutoSyncManager
+  // Unregister the old instance and register new one with AutoSyncManager
+  await getIt.unregister<EventRepository>();
+  getIt.registerSingleton<EventRepository>(
+    EventRepository(db, getIt<UserSession>(), getIt<AutoSyncManager>()),
   );
 
   // Note: Users are now managed in Supabase database
