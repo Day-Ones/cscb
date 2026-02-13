@@ -60,118 +60,20 @@ class _EventsHomePageState extends State<EventsHomePage> with SingleTickerProvid
   }
 
   Future<void> _showCreateEventDialog() async {
-    final nameController = TextEditingController();
-    
-    final result = await showDialog<bool>(
+    final result = await showDialog<Map<String, dynamic>?>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.blue.shade400,
-                          Colors.purple.shade400,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.add_circle_outline,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Text(
-                    'Create Event',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Event Name',
-                  hintText: 'Enter event name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.blue.shade400,
-                      width: 2,
-                    ),
-                  ),
-                  prefixIcon: const Icon(Icons.event),
-                ),
-                autofocus: true,
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (nameController.text.trim().isNotEmpty) {
-                          Navigator.pop(context, true);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade400,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Create'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => const _CreateEventDialog(),
     );
 
-    if (result == true && nameController.text.trim().isNotEmpty) {
-      await _createEvent(nameController.text.trim());
+    if (result != null) {
+      await _createEvent(
+        result['name'] as String,
+        result['dateTime'] as DateTime,
+      );
     }
   }
 
-  Future<void> _createEvent(String name) async {
+  Future<void> _createEvent(String name, DateTime eventDate) async {
     try {
       final uuid = const Uuid();
       final event = EventsCompanion(
@@ -179,7 +81,7 @@ class _EventsHomePageState extends State<EventsHomePage> with SingleTickerProvid
         orgId: const Value('default-org'), // Simplified - no org needed for now
         name: Value(name),
         description: const Value(''),
-        eventDate: Value(DateTime.now()),
+        eventDate: Value(eventDate),
         location: const Value('TBD'),
         createdBy: const Value('system'),
         isSynced: const Value(false),
@@ -518,5 +420,311 @@ class _EventsHomePageState extends State<EventsHomePage> with SingleTickerProvid
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
+  }
+}
+
+
+// Dialog widget for creating events with date and time selection
+class _CreateEventDialog extends StatefulWidget {
+  const _CreateEventDialog();
+
+  @override
+  State<_CreateEventDialog> createState() => _CreateEventDialogState();
+}
+
+class _CreateEventDialogState extends State<_CreateEventDialog> {
+  final _nameController = TextEditingController();
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 5),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.blue.shade400,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.blue.shade400,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
+  void _handleCreate() {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an event name'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a date'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a time'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Combine date and time
+    final eventDateTime = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      _selectedTime!.hour,
+      _selectedTime!.minute,
+    );
+
+    Navigator.pop(context, {
+      'name': _nameController.text.trim(),
+      'dateTime': eventDateTime,
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.blue.shade400,
+                          Colors.purple.shade400,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.add_circle_outline,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Create Event',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Event Name
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Event Name',
+                  hintText: 'Enter event name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.blue.shade400,
+                      width: 2,
+                    ),
+                  ),
+                  prefixIcon: const Icon(Icons.event),
+                ),
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+              ),
+              const SizedBox(height: 16),
+
+              // Date Picker
+              InkWell(
+                onTap: _pickDate,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: Colors.blue.shade400),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          _selectedDate == null
+                              ? 'Select date'
+                              : _formatDate(_selectedDate!),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _selectedDate == null
+                                ? Colors.grey.shade600
+                                : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Time Picker
+              InkWell(
+                onTap: _pickTime,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time, color: Colors.blue.shade400),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          _selectedTime == null
+                              ? 'Select time'
+                              : _formatTime(_selectedTime!),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _selectedTime == null
+                                ? Colors.grey.shade600
+                                : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _handleCreate,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade400,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Create'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -27,6 +27,9 @@ class _AttendanceListPageState extends State<AttendanceListPage> {
   bool _isExporting = false;
   AttendanceSortOption _sortOption = AttendanceSortOption.programYearLevel;
   bool _isGrouped = true;
+  
+  // Export filter state
+  String? _exportFilterSection; // e.g., "BSIT 3-1", "DIT 1-1", or null for all
 
   @override
   void initState() {
@@ -67,6 +70,123 @@ class _AttendanceListPageState extends State<AttendanceListPage> {
         _isGrouped = false;
         break;
     }
+  }
+
+  /// Get list of unique sections (program + year level combinations)
+  List<String> _getAvailableSections() {
+    final sections = <String>{};
+    for (var attendance in _attendanceList) {
+      sections.add(attendance.program); // e.g., "BSIT 3-1", "DIT 1-1"
+    }
+    final sortedSections = sections.toList()..sort();
+    return sortedSections;
+  }
+
+  /// Get filtered list based on selected section
+  List<StudentAttendance> _getFilteredList() {
+    if (_exportFilterSection == null) {
+      return _displayedList; // All records
+    }
+    return _displayedList.where((record) => record.program == _exportFilterSection).toList();
+  }
+
+  /// Show filter dialog before export
+  Future<void> _showFilterDialog(Function(String?) onFilterSelected) async {
+    final sections = _getAvailableSections();
+    
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Filter by Section',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Select a section to export, or choose "All" for complete list',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // All option
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.select_all, color: Colors.blue.shade700),
+              ),
+              title: const Text('All Sections'),
+              subtitle: Text('${_attendanceList.length} students'),
+              trailing: _exportFilterSection == null
+                  ? Icon(Icons.check_circle, color: Colors.blue.shade700)
+                  : null,
+              onTap: () {
+                Navigator.pop(context);
+                onFilterSelected(null);
+              },
+            ),
+            const Divider(),
+            // Individual sections
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: sections.length,
+                itemBuilder: (context, index) {
+                  final section = sections[index];
+                  final count = _attendanceList.where((r) => r.program == section).length;
+                  final isSelected = _exportFilterSection == section;
+                  
+                  return ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.green.shade50 : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.school,
+                        color: isSelected ? Colors.green.shade700 : Colors.grey.shade600,
+                      ),
+                    ),
+                    title: Text(
+                      section,
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    subtitle: Text('$count students'),
+                    trailing: isSelected
+                        ? Icon(Icons.check_circle, color: Colors.green.shade700)
+                        : null,
+                    onTap: () {
+                      Navigator.pop(context);
+                      onFilterSelected(section);
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showSortOptions() {
@@ -150,149 +270,220 @@ class _AttendanceListPageState extends State<AttendanceListPage> {
   }
 
   Future<void> _exportToPDF() async {
-    setState(() => _isExporting = true);
-    try {
-      final pdf = pw.Document();
+    // Show filter dialog first
+    await _showFilterDialog((selectedFilter) async {
+      setState(() {
+        _exportFilterSection = selectedFilter;
+        _isExporting = true;
+      });
+      
+      try {
+        final filteredList = _getFilteredList();
+        final filterText = _exportFilterSection ?? 'All Sections';
+        
+        final pdf = pw.Document();
 
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          build: (pw.Context context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  'Attendance Report',
-                  style: pw.TextStyle(
-                    fontSize: 24,
-                    fontWeight: pw.FontWeight.bold,
+        pdf.addPage(
+          pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.all(40),
+            build: (pw.Context context) {
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  // Title - Centered
+                  pw.Center(
+                    child: pw.Text(
+                      'ATTENDANCE REPORT',
+                      style: pw.TextStyle(
+                        fontSize: 20,
+                        fontWeight: pw.FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
                   ),
-                ),
-                pw.SizedBox(height: 8),
-                pw.Text(
-                  'Event: ${widget.event.name}',
-                  style: const pw.TextStyle(fontSize: 16),
-                ),
-                pw.Text(
-                  'Date: ${_formatDate(widget.event.eventDate)}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.Text(
-                  'Total Attendees: ${_attendanceList.length}',
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
-                pw.SizedBox(height: 20),
-                pw.Table.fromTextArray(
-                  headers: ['#', 'Student No.', 'Name', 'Program', 'Year', 'Check-in Time'],
-                  data: _displayedList.asMap().entries.map((entry) {
-                    final index = entry.key + 1;
-                    final record = entry.value;
-                    // Extract program abbreviation (BSIT or DIT) and year level (1-1, 2-1, etc.)
-                    final programParts = record.program.split(' ');
-                    final programAbbrev = programParts.isNotEmpty ? programParts[0] : record.program;
-                    final yearLevel = programParts.length > 1 ? programParts[1] : '${record.yearLevel}-1';
-                    
-                    return [
-                      index.toString(),
-                      record.studentNumber,
-                      record.fullName,
-                      programAbbrev, // Just BSIT or DIT
-                      yearLevel, // Just 1-1, 2-1, 3-1, or 4-1
-                      _formatDateTime(record.timestamp),
-                    ];
-                  }).toList(),
-                  headerStyle: pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
-                    fontSize: 12,
+                  pw.SizedBox(height: 24),
+                  
+                  // Event name (left) and Date (right) on same line
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'Event: ${widget.event.name}',
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.Text(
+                        'Date: ${_formatDate(widget.event.eventDate)}',
+                        style: const pw.TextStyle(fontSize: 12),
+                      ),
+                    ],
                   ),
-                  cellStyle: const pw.TextStyle(fontSize: 10),
-                  cellAlignment: pw.Alignment.centerLeft,
-                ),
-              ],
-            );
-          },
-        ),
-      );
-
-      final output = await getTemporaryDirectory();
-      final file = File('${output.path}/attendance_${widget.event.name.replaceAll(' ', '_')}.pdf');
-      await file.writeAsBytes(await pdf.save());
-
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'Attendance Report - ${widget.event.name}',
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PDF exported successfully!')),
+                  pw.SizedBox(height: 8),
+                  
+                  // Year & Section
+                  pw.Text(
+                    'Year & Section: ${_exportFilterSection ?? 'All Year Levels'}',
+                    style: const pw.TextStyle(fontSize: 11),
+                  ),
+                  pw.SizedBox(height: 6),
+                  
+                  // Total Attendees
+                  pw.Text(
+                    'Total Attendees: ${filteredList.length}',
+                    style: pw.TextStyle(
+                      fontSize: 11,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 20),
+                  
+                  // Divider line
+                  pw.Divider(thickness: 1.5),
+                  pw.SizedBox(height: 12),
+                  
+                  // Table
+                  pw.Table.fromTextArray(
+                    headers: ['#', 'Student No.', 'Name', 'Program', 'Year', 'Check-in Time'],
+                    data: filteredList.asMap().entries.map((entry) {
+                      final index = entry.key + 1;
+                      final record = entry.value;
+                      // Extract program abbreviation (BSIT or DIT) and year level (1-1, 2-1, etc.)
+                      final programParts = record.program.split(' ');
+                      final programAbbrev = programParts.isNotEmpty ? programParts[0] : record.program;
+                      final yearLevel = programParts.length > 1 ? programParts[1] : '${record.yearLevel}-1';
+                      
+                      return [
+                        index.toString(),
+                        record.studentNumber,
+                        record.fullName,
+                        programAbbrev, // Just BSIT or DIT
+                        yearLevel, // Just 1-1, 2-1, 3-1, or 4-1
+                        _formatDateTime(record.timestamp),
+                      ];
+                    }).toList(),
+                    headerStyle: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                    cellStyle: const pw.TextStyle(fontSize: 9),
+                    cellAlignment: pw.Alignment.centerLeft,
+                    headerDecoration: pw.BoxDecoration(
+                      color: PdfColors.grey300,
+                    ),
+                    headerPadding: const pw.EdgeInsets.all(8),
+                    cellPadding: const pw.EdgeInsets.all(6),
+                    border: pw.TableBorder.all(
+                      color: PdfColors.grey400,
+                      width: 0.5,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error exporting PDF: $e')),
+
+        final output = await getTemporaryDirectory();
+        final filterSuffix = _exportFilterSection != null 
+            ? '_${_exportFilterSection!.replaceAll(' ', '_')}' 
+            : '_all';
+        final file = File('${output.path}/attendance_${widget.event.name.replaceAll(' ', '_')}$filterSuffix.pdf');
+        await file.writeAsBytes(await pdf.save());
+
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: 'Attendance Report - ${widget.event.name} ($filterText)',
         );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('PDF exported successfully! ($filterText)')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error exporting PDF: $e')),
+          );
+        }
+      } finally {
+        setState(() => _isExporting = false);
       }
-    } finally {
-      setState(() => _isExporting = false);
-    }
+    });
   }
 
   Future<void> _exportToExcel() async {
-    setState(() => _isExporting = true);
-    try {
-      List<List<dynamic>> rows = [
-        ['Event', widget.event.name],
-        ['Date', _formatDate(widget.event.eventDate)],
-        ['Total Attendees', _attendanceList.length.toString()],
-        [], // Empty row
-        ['#', 'Student No.', 'Last Name', 'First Name', 'Program', 'Year Level', 'Check-in Time'],
-      ];
-
-      for (var i = 0; i < _displayedList.length; i++) {
-        final record = _displayedList[i];
-        // Extract program abbreviation (BSIT or DIT) and year level (1-1, 2-1, etc.)
-        final programParts = record.program.split(' ');
-        final programAbbrev = programParts.isNotEmpty ? programParts[0] : record.program;
-        final yearLevel = programParts.length > 1 ? programParts[1] : '${record.yearLevel}-1';
+    // Show filter dialog first
+    await _showFilterDialog((selectedFilter) async {
+      setState(() {
+        _exportFilterSection = selectedFilter;
+        _isExporting = true;
+      });
+      
+      try {
+        final filteredList = _getFilteredList();
+        final filterText = _exportFilterSection ?? 'All Sections';
         
-        rows.add([
-          (i + 1).toString(),
-          record.studentNumber,
-          record.lastName,
-          record.firstName,
-          programAbbrev, // Just BSIT or DIT
-          yearLevel, // Just 1-1, 2-1, 3-1, or 4-1
-          _formatDateTime(record.timestamp),
-        ]);
-      }
+        List<List<dynamic>> rows = [
+          ['Event', widget.event.name],
+          ['Date', _formatDate(widget.event.eventDate)],
+          ['Filter', filterText],
+          ['Total Attendees', filteredList.length.toString()],
+          [], // Empty row
+          ['#', 'Student No.', 'Last Name', 'First Name', 'Program', 'Year Level', 'Check-in Time'],
+        ];
 
-      String csv = const ListToCsvConverter().convert(rows);
+        for (var i = 0; i < filteredList.length; i++) {
+          final record = filteredList[i];
+          // Extract program abbreviation (BSIT or DIT) and year level (1-1, 2-1, etc.)
+          final programParts = record.program.split(' ');
+          final programAbbrev = programParts.isNotEmpty ? programParts[0] : record.program;
+          final yearLevel = programParts.length > 1 ? programParts[1] : '${record.yearLevel}-1';
+          
+          rows.add([
+            (i + 1).toString(),
+            record.studentNumber,
+            record.lastName,
+            record.firstName,
+            programAbbrev, // Just BSIT or DIT
+            yearLevel, // Just 1-1, 2-1, 3-1, or 4-1
+            _formatDateTime(record.timestamp),
+          ]);
+        }
 
-      final output = await getTemporaryDirectory();
-      final file = File('${output.path}/attendance_${widget.event.name.replaceAll(' ', '_')}.csv');
-      await file.writeAsString(csv);
+        String csv = const ListToCsvConverter().convert(rows);
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'Attendance Report - ${widget.event.name}',
-      );
+        final output = await getTemporaryDirectory();
+        final filterSuffix = _exportFilterSection != null 
+            ? '_${_exportFilterSection!.replaceAll(' ', '_')}' 
+            : '_all';
+        final file = File('${output.path}/attendance_${widget.event.name.replaceAll(' ', '_')}$filterSuffix.csv');
+        await file.writeAsString(csv);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('CSV exported successfully!')),
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: 'Attendance Report - ${widget.event.name} ($filterText)',
         );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('CSV exported successfully! ($filterText)')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error exporting CSV: $e')),
+          );
+        }
+      } finally {
+        setState(() => _isExporting = false);
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error exporting CSV: $e')),
-        );
-      }
-    } finally {
-      setState(() => _isExporting = false);
-    }
+    });
   }
 
   void _showExportOptions() {
