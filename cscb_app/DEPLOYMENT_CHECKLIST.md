@@ -22,6 +22,9 @@
 - [x] **Added `pullEvents()` method to sync events from Supabase**
 - [x] **Added `pullAttendance()` method to sync attendance from Supabase**
 - [x] **Added `getAllAttendance()` to remote repository**
+- [x] **Added immediate sync after event creation**
+- [x] **Added immediate sync after attendance recording**
+- [x] **Injected AutoSyncManager into EventRepository**
 - [x] All files compile successfully
 - [x] Changes pushed to GitHub (feat/nav branch)
 
@@ -153,6 +156,8 @@
 - `AUTO_SYNC_FEATURE.md` - Automatic sync documentation
 - `SYNC_STATUS_INDICATOR.md` - Visual sync status indicator documentation
 - `BIDIRECTIONAL_SYNC.md` - **NEW! Bi-directional sync explanation**
+- `BIDIRECTIONAL_SYNC_SUMMARY.md` - **Quick overview of bi-directional sync**
+- `IMMEDIATE_SYNC.md` - **NEW! Immediate sync after actions**
 - `SUPABASE_SYNC_QUICK_START.md` - Step-by-step setup guide
 - `supabase_sync_migration.sql` - SQL to run in Supabase
 
